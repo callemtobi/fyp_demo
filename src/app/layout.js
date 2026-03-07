@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import Metadata from "next";
 import "./globals.css";
 import { ThirdwebProvider } from "thirdweb/react";
+import axios from "axios";
 
 const inter = Inter({ subsets: ["latin"] });
 

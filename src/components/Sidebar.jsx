@@ -12,6 +12,8 @@ import {
   Settings as SettingsIcon,
   LogOut,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -26,6 +28,35 @@ const navItems = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    async function getUserData() {
+      const token = localStorage.getItem("token");
+      console.log(token);
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/auth/getUser",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        setUserData(response.data.data);
+        console.log("User data fetched:", response.data.data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    }
+    getUserData();
+  }, []);
 
   return (
     <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col">
@@ -61,8 +92,12 @@ export default function Sidebar() {
 
       <div className="p-4 border-t border-neutral-200">
         <div className="px-4 py-2">
-          <p className="text-sm text-neutral-700">Student Analyst</p>
-          <p className="text-xs text-neutral-500">student@university.edu</p>
+          <p className="text-sm text-neutral-700">
+            {userData?.role || "Student Analyst"}
+          </p>
+          <p className="text-xs text-neutral-500">
+            {userData?.email || "student@university.edu"}
+          </p>
         </div>
         <button
           onClick={() => router.push("/login")}
