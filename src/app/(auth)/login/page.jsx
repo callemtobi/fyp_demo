@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ConnectButton } from "thirdweb/react";
 import Link from "next/link";
 import axios from "axios";
+import { client } from "./client";
 
 const roles = [
   "Student Investigator",
@@ -77,6 +79,16 @@ export default function Login() {
           <p className="text-sm text-neutral-500">
             Blockchain-Based Forensic Evidence Management
           </p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg text-center border border-neutral-200 p-2 mb-2">
+          <ConnectButton
+            client={client}
+            appMetadata={{
+              name: "Example App",
+              url: "https://example.com",
+            }}
+          />
         </div>
 
         {/* Login Card */}

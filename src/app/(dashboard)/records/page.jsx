@@ -1,6 +1,8 @@
 "use client";
 
+import axios from "axios";
 import { Eye } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const evidenceRecords = [
   {
@@ -46,6 +48,34 @@ const evidenceRecords = [
 ];
 
 export default function EvidenceRecords() {
+  const [error, setError] = useState(null);
+  const [evidenceData, setEvidenceData] = useState([]);
+
+  const getEvidenceRecords = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+      const response = await axios.get("http://localhost:8000/api/evidence/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setEvidenceData(response.data.data);
+      console.log(response.data.data);
+      console.log("sss", evidenceData);
+    } catch (err) {
+      console.error("Auth Error:", err.response?.status, err.response?.data);
+      setError(err.response?.data?.message || "Failed to fetch evidence");
+    }
+  };
+
+  useEffect(() => {
+    getEvidenceRecords();
+  }, []);
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -86,50 +116,53 @@ export default function EvidenceRecords() {
               </tr>
             </thead>
             <tbody>
-              {evidenceRecords.map((record) => (
+              {evidenceData.map((evidence) => (
                 <tr
-                  key={record.id}
+                  key={evidence.id}
                   className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <span className="text-sm text-neutral-800 font-mono">
-                      {record.id}
+                      {evidence.id}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <code className="text-xs text-neutral-600 font-mono">
-                      {record.hash}
+                      {evidence.hash}
                     </code>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-neutral-700">
-                      {record.caseId}
+                      {evidence.caseId}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-neutral-700">
-                      {record.type}
+                      {evidence.type}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs text-neutral-600">
-                      {record.date}
+                      {evidence.date}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex px-2 py-1 rounded text-xs ${
-                        record.status === "Verified"
+                        evidence.status === "Verified"
                           ? "bg-green-50 text-green-700"
                           : "bg-yellow-50 text-yellow-700"
                       }`}
                     >
-                      {record.status}
+                      {evidence.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <button className="p-2 hover:bg-neutral-100 rounded-lg transition-colors">
-                      <Eye className="w-4 h-4 text-neutral-600" strokeWidth={1.5} />
+                      <Eye
+                        className="w-4 h-4 text-neutral-600"
+                        strokeWidth={1.5}
+                      />
                     </button>
                   </td>
                 </tr>

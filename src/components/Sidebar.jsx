@@ -33,7 +33,7 @@ export default function Sidebar() {
   useEffect(() => {
     async function getUserData() {
       const token = localStorage.getItem("token");
-      console.log(token);
+      console.log("Token:", token);
       if (!token) {
         console.log("No token found");
         return;
@@ -50,7 +50,7 @@ export default function Sidebar() {
         );
 
         setUserData(response.data.data);
-        console.log("User data fetched:", response.data.data);
+        // console.log("User data fetched:", response.data.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
       }

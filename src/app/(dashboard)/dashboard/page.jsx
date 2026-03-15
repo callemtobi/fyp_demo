@@ -1,11 +1,8 @@
 "use client";
 
-import {
-  FolderOpen,
-  Briefcase,
-  CheckCircle2,
-  TrendingUp,
-} from "lucide-react";
+import { FolderOpen, Briefcase, CheckCircle2, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   AreaChart,
   Area,
@@ -16,28 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const stats = [
-  {
-    label: "Total Evidence",
-    value: "24",
-    icon: FolderOpen,
-    color: "blue",
-  },
-  {
-    label: "Active Cases",
-    value: "5",
-    icon: Briefcase,
-    color: "green",
-  },
-  {
-    label: "Status",
-    value: "Active",
-    icon: CheckCircle2,
-    color: "emerald",
-  },
-];
-
-const evidenceData = [
+const evidenceDataa = [
   { month: "Week 1", count: 3 },
   { month: "Week 2", count: 5 },
   { month: "Week 3", count: 8 },
@@ -66,6 +42,96 @@ const recentActivity = [
 ];
 
 export default function Dashboard() {
+  const [evidenceData, setEvidenceData] = useState([]);
+  const [caseData, setCaseData] = useState([]);
+  const [error, setError] = useState(null);
+  console.log("casee", caseData);
+
+  const [stats, setStats] = useState([
+    {
+      label: "Total Evidence",
+      value: 0,
+      icon: FolderOpen,
+      color: "blue",
+    },
+    {
+      label: "Active Cases",
+      value: "5",
+      icon: Briefcase,
+      color: "green",
+    },
+    {
+      label: "Status",
+      value: "Active",
+      icon: CheckCircle2,
+      color: "emerald",
+    },
+  ]);
+
+  // Update stats when evidenceData changes
+  useEffect(() => {
+    setStats((prevStats) => [
+      {
+        ...prevStats[0],
+        value: evidenceData.length,
+      },
+      {
+        ...prevStats[1],
+        value: caseData.filter((e) => e.status === "open").length,
+      },
+      // prevStats[1],
+      prevStats[2],
+    ]);
+  }, [evidenceData]);
+
+  useEffect(() => {
+    async function getEvidence() {
+      const token = localStorage.getItem("token");
+      console.log("Token (Dashboard):", token);
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:8000/api/evidence", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Number of Evidence:", response.data.count);
+        setEvidenceData(response.data.data);
+      } catch (err) {
+        // In dashboard page.jsx, line 107-109
+        console.error("Auth Error:", err.response?.status, err.response?.data);
+        setError(err.response?.data?.message || "Failed to fetch evidence");
+      }
+    }
+    getEvidence();
+  }, []);
+
+  useEffect(() => {
+    async function getCases() {
+      const token = localStorage.getItem("token");
+      console.log("Token (Dashboard):", token);
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:8000/api/cases", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Number of Cases:", response.data.count);
+        setCaseData(response.data.data);
+      } catch (err) {
+        // In dashboard page.jsx, line 107-109
+        console.error("Auth Error:", err.response?.status, err.response?.data);
+        setError(err.response?.data?.message || "Failed to fetch cases");
+      }
+    }
+    getCases();
+  }, []);
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -113,10 +179,10 @@ export default function Dashboard() {
           <h2 className="text-sm text-neutral-700">Evidence Upload Trend</h2>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={evidenceData}>
+          <AreaChart data={evidenceDataa}>
             <defs>
               <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
               </linearGradient>
             </defs>

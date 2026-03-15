@@ -11,10 +11,18 @@ export default function UploadEvidence() {
   const [showHash, setShowHash] = useState(false);
 
   // Form data
-  const [caseId, setCaseId] = useState("");
   const [evidenceType, setEvidenceType] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedTags, setSelectedTags] = useState({});
   const allowedTypes = ["Digital Document", "Image", "Other"];
+  const availableTags = [
+    "forensic",
+    "chain-of-custody",
+    "verified",
+    "witness-statement",
+    "digital-forensics",
+    "surveillance",
+  ];
 
   // Response data
   const [ipfsHash, setIpfsHash] = useState("");
@@ -32,17 +40,18 @@ export default function UploadEvidence() {
     }
   };
 
+  const handleTagToggle = (tag) => {
+    setSelectedTags((prev) => ({
+      ...prev,
+      [tag]: !prev[tag],
+    }));
+  };
+
   const uploadFile = async () => {
     try {
       // Validation
       if (!file) {
         setError("No file selected");
-        return;
-      }
-
-      // added
-      if (!caseId.trim()) {
-        setError("At least one of Case ID or Description is required");
         return;
       }
 
@@ -63,13 +72,15 @@ export default function UploadEvidence() {
       // Create FormData
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("caseId", caseId); // added
       formData.append("description", description);
 
-      // Optional fields
-      // if (caseId.trim()) {
-      //   formData.append("caseId", caseId);
-      // }
+      // Optional fields - convert selected tags to comma-separated string
+      const selectedTagsList = Object.keys(selectedTags).filter(
+        (tag) => selectedTags[tag],
+      );
+      if (selectedTagsList.length > 0) {
+        formData.append("tags", selectedTagsList.join(","));
+      }
 
       // Add metadata as JSON string
       const metadata = {
@@ -139,9 +150,9 @@ export default function UploadEvidence() {
     setFile(null);
     setUploadedFile(null);
     setShowHash(false);
-    setCaseId("");
     setDescription("");
     setEvidenceType("");
+    setSelectedTags({});
     setIpfsHash("");
     setFileHash("");
     setEvidenceId("");
@@ -246,21 +257,6 @@ export default function UploadEvidence() {
             <h2 className="text-sm text-neutral-700 mb-4">Evidence Details</h2>
 
             <div className="space-y-4">
-              {/* Case ID */}
-              <div>
-                <label className="block text-xs text-neutral-600 mb-2">
-                  Case ID <span className="text-neutral-400">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., CASE-001"
-                  value={caseId}
-                  onChange={(e) => setCaseId(e.target.value)}
-                  disabled={uploading}
-                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                />
-              </div>
-
               {/* Evidence Type */}
               <div>
                 <label className="block text-xs text-neutral-600 mb-2">
@@ -297,6 +293,33 @@ export default function UploadEvidence() {
                   className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
                 />
               </div>
+
+              {/* Tags */}
+              <div>
+                <label className="block text-xs text-neutral-600 mb-3">
+                  Tags{" "}
+                  <span className="text-neutral-400">(Select multiple)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableTags.map((tag) => (
+                    <label
+                      key={tag}
+                      className="flex items-center gap-2 cursor-pointer p-3 bg-neutral-50 border border-neutral-200 rounded-lg hover:bg-neutral-100 hover:border-blue-300 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTags[tag] || false}
+                        onChange={() => handleTagToggle(tag)}
+                        disabled={uploading}
+                        className="w-4 h-4 text-blue-600 rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-neutral-700 capitalize font-medium">
+                        {tag}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -304,6 +327,26 @@ export default function UploadEvidence() {
         {/* Hash Display */}
         {uploadedFile && showHash && (
           <div className="space-y-4 mb-6">
+            {/* Evidence ID - Prominent Display */}
+            <div className="bg-orange-50 border border-orange-300 rounded-xl p-6 shadow-lg">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-lg font-bold text-orange-700">ID</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-orange-600 font-semibold mb-2 uppercase tracking-wide">
+                    Evidence Identification
+                  </p>
+                  <code className="text-lg text-orange-900 font-bold font-mono break-all block bg-white p-4 rounded-lg border border-orange-200 mb-2">
+                    {evidenceId}
+                  </code>
+                  <p className="text-xs text-orange-700">
+                    ⚠️ Save this ID for reference and tracking
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Success Message */}
             <div className="bg-green-50 border border-green-200 rounded-xl p-6">
               <div className="flex items-start gap-3">
@@ -314,9 +357,6 @@ export default function UploadEvidence() {
                 <div className="flex-1">
                   <p className="text-sm text-green-900 font-medium mb-1">
                     Evidence Uploaded Successfully
-                  </p>
-                  <p className="text-xs text-green-700">
-                    Evidence ID: {evidenceId}
                   </p>
                 </div>
               </div>
@@ -385,12 +425,7 @@ export default function UploadEvidence() {
                 </button>
                 <button
                   onClick={uploadFile}
-                  disabled={
-                    uploading ||
-                    !description.trim() ||
-                    !caseId.trim() ||
-                    !evidenceType
-                  }
+                  disabled={uploading || !description.trim() || !evidenceType}
                   className="px-8 py-3 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
