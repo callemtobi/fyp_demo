@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { logout } from "@/lib/jwtUtils";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -100,7 +101,9 @@ export default function Sidebar() {
           </p>
         </div>
         <button
-          onClick={() => router.push("/login")}
+          onClick={() => {
+            logout(router);
+          }}
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors w-full mt-2"
         >
           <LogOut className="w-5 h-5" strokeWidth={1.5} />

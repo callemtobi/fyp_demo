@@ -328,6 +328,21 @@ export default function UploadEvidence() {
         {uploadedFile && showHash && (
           <div className="space-y-4 mb-6">
             {/* Evidence ID - Prominent Display */}
+            {/* Success Message */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+              <div className="flex items-start gap-3">
+                <CheckCircle2
+                  className="w-5 h-5 text-green-600 mt-0.5"
+                  strokeWidth={1.5}
+                />
+                <div className="flex-1">
+                  <p className="text-sm text-green-900 font-medium mb-1">
+                    Evidence Uploaded Successfully
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-orange-50 border border-orange-300 rounded-xl p-6 shadow-lg">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0">
@@ -342,21 +357,6 @@ export default function UploadEvidence() {
                   </code>
                   <p className="text-xs text-orange-700">
                     ⚠️ Save this ID for reference and tracking
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Success Message */}
-            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-              <div className="flex items-start gap-3">
-                <CheckCircle2
-                  className="w-5 h-5 text-green-600 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-green-900 font-medium mb-1">
-                    Evidence Uploaded Successfully
                   </p>
                 </div>
               </div>

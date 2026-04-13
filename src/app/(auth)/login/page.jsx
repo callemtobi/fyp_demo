@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield } from "lucide-react";
+import { Shield, Copy, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ConnectButton } from "thirdweb/react";
 import Link from "next/link";
 import axios from "axios";
 import { client } from "./client";
+import { initializeAxiosInterceptors } from "@/lib/axiosConfig";
 
 const roles = [
   "Student Investigator",
@@ -20,6 +21,7 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -31,6 +33,18 @@ export default function Login() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleCopy = async (text, field) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+
+      // reset after 1.5s
+      setTimeout(() => setCopiedField(null), 1500);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -55,6 +69,10 @@ export default function Login() {
       );
       console.log("Login successful:", response.data);
       localStorage.setItem("token", response.data.token);
+      
+      // Initialize axios interceptors
+      initializeAxiosInterceptors(router);
+      
       router.push("/dashboard");
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");
@@ -79,16 +97,6 @@ export default function Login() {
           <p className="text-sm text-neutral-500">
             Blockchain-Based Forensic Evidence Management
           </p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg text-center border border-neutral-200 p-2 mb-2">
-          <ConnectButton
-            client={client}
-            appMetadata={{
-              name: "Example App",
-              url: "https://example.com",
-            }}
-          />
         </div>
 
         {/* Login Card */}
@@ -166,6 +174,16 @@ export default function Login() {
             </button>
           </form>
 
+          <div className="bg-white rounded-2xl shadow-lg text-center border border-neutral-200 p-2 my-2">
+            <ConnectButton
+              client={client}
+              appMetadata={{
+                name: "Example App",
+                url: "https://example.com",
+              }}
+            />
+          </div>
+
           {/* Footer Note */}
           <p className="text-xs text-neutral-500 text-center mt-6">
             Secure access to forensic evidence management system
@@ -177,21 +195,94 @@ export default function Login() {
           Final Year Project | Blockchain Technology | 2026
         </p>
       </div>
-      <div
-        className="note"
-        style={{
-          position: "absolute",
-          top: "12rem",
-          left: "57rem",
-          color: "black",
-          padding: "1rem",
-          border: "1px solid black",
-          borderRadius: "1rem",
-        }}
-      >
-        <p>tobi659@example.com</p>
-        <p>Pass123</p>
+
+      {/* Test Credentials Tooltip */}
+      <div className="flex">
+        <div className="absolute top-48 right-10 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">
+          <div className="flex items-center mt-2">
+            <label className="text-sm text-neutral-600 mr-2">Email:</label>
+            <input
+              type="text"
+              value="tobi659@example.com"
+              readOnly
+              className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+            />
+            <button
+              onClick={() => handleCopy("tobi659@example.com", "email")}
+              className="ml-2"
+            >
+              {copiedField === "email" ? (
+                <Check className="w-4 h-4 text-green-500" />
+              ) : (
+                <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center mt-2">
+            <label className="text-sm text-neutral-600 mr-2">Password:</label>
+            <input
+              type="text"
+              value="Pass123"
+              readOnly
+              className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+            />
+            <button
+              onClick={() => handleCopy("Pass123", "password")}
+              className="ml-2"
+            >
+              {copiedField === "password" ? (
+                <Check className="w-4 h-4 text-green-500" />
+              ) : (
+                <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center mt-2">
+            <label className="text-sm text-neutral-600 mr-2">Role:</label>
+            <input
+              type="text"
+              value="Student Investigator"
+              readOnly
+              className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+            />
+          </div>
+        </div>
       </div>
+      {/* <div className="flex">
+        <div className="absolute top-48 right-10 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">
+          <div className="flex items-center space-x-2 mt-2">
+            <label className="text-sm text-neutral-600">Email:</label>
+            <input
+              type="text"
+              value="tobi659@example.com"
+              readOnly
+              className="bg-transparent text-neutral-600 border-none focus:outline-none"
+            ></input>
+            <Copy className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <label className="text-sm text-neutral-600">Password:</label>
+            <input
+              type="text"
+              value="Pass123"
+              readOnly
+              className="bg-transparent text-neutral-600 border-none focus:outline-none"
+            ></input>
+            <Copy className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
+          </div>
+          <div className="flex items-center space-x-2 mt-2">
+            <label className="text-sm text-neutral-600">Role:</label>
+            <input
+              type="text"
+              value="Student Investigator"
+              readOnly
+              className="bg-transparent text-neutral-600 border-none focus:outline-none"
+            ></input>
+          </div>
+        </div>
+      </div> */}
     </div>
   );
 }

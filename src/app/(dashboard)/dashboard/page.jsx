@@ -13,39 +13,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const evidenceDataa = [
-  { month: "Week 1", count: 3 },
-  { month: "Week 2", count: 5 },
-  { month: "Week 3", count: 8 },
-  { month: "Week 4", count: 8 },
-];
-
-const recentActivity = [
-  {
-    id: "EV-001",
-    action: "Evidence Uploaded",
-    user: "Student Analyst",
-    time: "2 hours ago",
-  },
-  {
-    id: "EV-002",
-    action: "Hash Verified",
-    user: "System",
-    time: "3 hours ago",
-  },
-  {
-    id: "EV-003",
-    action: "Report Generated",
-    user: "Student Analyst",
-    time: "1 day ago",
-  },
-];
-
 export default function Dashboard() {
   const [evidenceData, setEvidenceData] = useState([]);
   const [caseData, setCaseData] = useState([]);
   const [error, setError] = useState(null);
-  console.log("casee", caseData);
+  const [evidenceTrendData, setEvidenceTrendData] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // console.log("casee", caseData);
 
   const [stats, setStats] = useState([
     {
@@ -87,9 +62,9 @@ export default function Dashboard() {
   useEffect(() => {
     async function getEvidence() {
       const token = localStorage.getItem("token");
-      console.log("Token (Dashboard):", token);
+      // console.log("Token (Dashboard):", token);
       if (!token) {
-        console.log("No token found");
+        // console.log("No token found");
         return;
       }
 
@@ -97,7 +72,7 @@ export default function Dashboard() {
         const response = await axios.get("http://localhost:8000/api/evidence", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Number of Evidence:", response.data.count);
+        // console.log("Number of Evidence:", response.data.count);
         setEvidenceData(response.data.data);
       } catch (err) {
         // In dashboard page.jsx, line 107-109
@@ -111,7 +86,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function getCases() {
       const token = localStorage.getItem("token");
-      console.log("Token (Dashboard):", token);
+      // console.log("Token (Dashboard):", token);
       if (!token) {
         console.log("No token found");
         return;
@@ -121,7 +96,7 @@ export default function Dashboard() {
         const response = await axios.get("http://localhost:8000/api/cases", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Number of Cases:", response.data.count);
+        // console.log("Number of Cases:", response.data.count);
         setCaseData(response.data.data);
       } catch (err) {
         // In dashboard page.jsx, line 107-109
@@ -130,6 +105,60 @@ export default function Dashboard() {
       }
     }
     getCases();
+  }, []);
+
+  // Fetch evidence upload trend data
+  useEffect(() => {
+    async function getEvidenceTrend() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/cases/dashboard/evidence-trend",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        // console.log("Evidence Trend Data:", response.data.data);
+        setEvidenceTrendData(response.data.data);
+      } catch (err) {
+        console.error("Error fetching evidence trend:", err);
+        setError(err.response?.data?.message || "Failed to fetch trend data");
+      }
+    }
+    getEvidenceTrend();
+  }, []);
+
+  // Fetch recent activity data
+  useEffect(() => {
+    async function getRecentActivityData() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/cases/dashboard/recent-activity",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        // console.log("Recent Activity Data:", response.data.data);
+        setRecentActivity(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching recent activity:", err);
+        setError(err.response?.data?.message || "Failed to fetch activity");
+        setLoading(false);
+      }
+    }
+    getRecentActivityData();
   }, []);
 
   return (
@@ -178,61 +207,79 @@ export default function Dashboard() {
           <TrendingUp className="w-5 h-5 text-neutral-600" strokeWidth={1.5} />
           <h2 className="text-sm text-neutral-700">Evidence Upload Trend</h2>
         </div>
-        <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={evidenceDataa}>
-            <defs>
-              <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis
-              dataKey="month"
-              tick={{ fill: "#9ca3af", fontSize: 12 }}
-              axisLine={{ stroke: "#e5e7eb" }}
-            />
-            <YAxis
-              tick={{ fill: "#9ca3af", fontSize: 12 }}
-              axisLine={{ stroke: "#e5e7eb" }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#fff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                fontSize: "12px",
-              }}
-            />
-            <Area
-              type="monotone"
-              dataKey="count"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              fill="url(#colorCount)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {evidenceTrendData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={evidenceTrendData}>
+              <defs>
+                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="month"
+                tick={{ fill: "#9ca3af", fontSize: 12 }}
+                axisLine={{ stroke: "#e5e7eb" }}
+              />
+              <YAxis
+                tick={{ fill: "#9ca3af", fontSize: 12 }}
+                axisLine={{ stroke: "#e5e7eb" }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                fill="url(#colorCount)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-64 text-neutral-500">
+            <p>Loading chart data...</p>
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}
       <div className="bg-white rounded-xl border border-neutral-200 p-6">
         <h2 className="text-sm text-neutral-700 mb-4">Recent Activity</h2>
         <div className="space-y-4">
-          {recentActivity.map((activity) => (
-            <div
-              key={activity.id}
-              className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0"
-            >
-              <div>
-                <p className="text-sm text-neutral-700">{activity.action}</p>
-                <p className="text-xs text-neutral-500 mt-1">
-                  {activity.id} · {activity.user}
-                </p>
-              </div>
-              <span className="text-xs text-neutral-500">{activity.time}</span>
+          {loading ? (
+            <div className="text-center text-neutral-500 py-8">
+              <p>Loading recent activity...</p>
             </div>
-          ))}
+          ) : recentActivity.length > 0 ? (
+            recentActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0"
+              >
+                <div>
+                  <p className="text-sm text-neutral-700">{activity.action}</p>
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {activity.id} · {activity.user}
+                  </p>
+                </div>
+                <span className="text-xs text-neutral-500">
+                  {activity.time}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-neutral-500 py-8">
+              <p>No recent activity</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
