@@ -74,9 +74,10 @@ export default function EvidenceRecords() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setEvidenceData(response.data.data);
-      console.log(response.data.data);
-      console.log("sss", evidenceData);
+      const sortedData = response.data.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+      setEvidenceData(sortedData);
     } catch (err) {
       console.error("Auth Error:", err.response?.status, err.response?.data);
       setError(err.response?.data?.message || "Failed to fetch evidence");
