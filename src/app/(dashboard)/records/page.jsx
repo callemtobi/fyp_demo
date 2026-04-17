@@ -4,11 +4,13 @@ import axios from "axios";
 import { Eye, Copy, Check, ChainIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { SkeletonTableRow } from "@/components/SkeletonLoader";
 
 export default function EvidenceRecords() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [evidenceData, setEvidenceData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [copiedHash, setCopiedHash] = useState(null);
 
   const formatDate = (dateString) => {
@@ -64,9 +66,11 @@ export default function EvidenceRecords() {
 
   const getEvidenceRecords = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       if (!token) {
         console.log("No token found");
+        setLoading(false);
         return;
       }
       const response = await axios.get("http://localhost:8000/api/evidence/", {
@@ -81,6 +85,8 @@ export default function EvidenceRecords() {
     } catch (err) {
       console.error("Auth Error:", err.response?.status, err.response?.data);
       setError(err.response?.data?.message || "Failed to fetch evidence");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,74 +134,90 @@ export default function EvidenceRecords() {
               </tr>
             </thead>
             <tbody>
-              {evidenceData.map((evidence, index) => (
-                <tr
-                  key={evidence.id || evidence._id || index}
-                  className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <span className="text-xs text-neutral-800 font-mono truncate block">
-                      {evidence.evidenceId}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div
-                      className="flex items-center gap-2 group cursor-pointer"
-                      onClick={() =>
-                        copyToClipboard(evidence.ipfsHash, evidence._id)
-                      }
-                      title={evidence.ipfsHash}
-                    >
-                      <code className="text-xs text-neutral-600 font-mono truncate">
-                        {truncateHash(evidence.ipfsHash)}
-                      </code>
-                      {copiedHash === evidence._id ? (
-                        <Check className="w-3 h-3 text-green-600 flex-shrink-0" />
-                      ) : (
-                        <Copy className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs text-neutral-700 truncate block max-w-xs">
-                      {evidence.caseId || "-"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs text-neutral-700 truncate">
-                      {evidence.fileType}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs text-neutral-600 whitespace-nowrap">
-                      {formatDate(evidence.createdAt)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded text-xs whitespace-nowrap ${
-                        evidence.status === "Verified"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-yellow-50 text-yellow-700"
-                      }`}
-                    >
-                      {evidence.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => trackViewAndNavigate(evidence._id)}
-                      className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors inline-block"
-                      title="View Chain of Custody"
-                    >
-                      <Eye
-                        className="w-4 h-4 text-blue-600"
-                        strokeWidth={1.5}
-                      />
-                    </button>
+              {loading ? (
+                <div>
+                  <SkeletonTableRow />
+                  <SkeletonTableRow />
+                  <SkeletonTableRow />
+                  <SkeletonTableRow />
+                  <SkeletonTableRow />
+                </div>
+              ) : evidenceData.length > 0 ? (
+                evidenceData.map((evidence, index) => (
+                  <tr
+                    key={evidence.id || evidence._id || index}
+                    className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-neutral-800 font-mono truncate block">
+                        {evidence.evidenceId}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div
+                        className="flex items-center gap-2 group cursor-pointer"
+                        onClick={() =>
+                          copyToClipboard(evidence.ipfsHash, evidence._id)
+                        }
+                        title={evidence.ipfsHash}
+                      >
+                        <code className="text-xs text-neutral-600 font-mono truncate">
+                          {truncateHash(evidence.ipfsHash)}
+                        </code>
+                        {copiedHash === evidence._id ? (
+                          <Check className="w-3 h-3 text-green-600 flex-shrink-0" />
+                        ) : (
+                          <Copy className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-neutral-700 truncate block max-w-xs">
+                        {evidence.caseId || "-"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-neutral-700 truncate">
+                        {evidence.fileType}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-neutral-600 whitespace-nowrap">
+                        {formatDate(evidence.createdAt)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex px-2 py-1 rounded text-xs whitespace-nowrap ${
+                          evidence.status === "Verified"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-yellow-50 text-yellow-700"
+                        }`}
+                      >
+                        {evidence.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => trackViewAndNavigate(evidence._id)}
+                        className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors inline-block"
+                        title="View Chain of Custody"
+                      >
+                        <Eye
+                          className="w-4 h-4 text-blue-600"
+                          strokeWidth={1.5}
+                        />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center py-8 text-neutral-500">
+                    No evidence records found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

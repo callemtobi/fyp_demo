@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { Upload, Hash, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Upload, Hash, CheckCircle2, AlertCircle, Wallet } from "lucide-react";
 import axios from "axios";
+import {
+  connectWallet,
+  getConnectedWallet,
+  isMetaMaskAvailable,
+  isOnCorrectNetwork,
+  switchToPolygonAmoy,
+  signEvidenceTransaction,
+  waitForTransactionConfirmation,
+} from "@/lib/walletService";
+import { SkeletonBlock, SkeletonCard } from "@/components/SkeletonLoader";
 
 export default function UploadEvidence() {
   const [file, setFile] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [showHash, setShowHash] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   // Form data
   const [evidenceType, setEvidenceType] = useState("");
@@ -29,6 +40,78 @@ export default function UploadEvidence() {
   const [fileHash, setFileHash] = useState("");
   const [evidenceId, setEvidenceId] = useState("");
   const [error, setError] = useState("");
+
+  // Wallet state
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [walletProvider, setWalletProvider] = useState(null);
+  const [walletSigner, setWalletSigner] = useState(null);
+  const [metaMaskAvailable, setMetaMaskAvailable] = useState(false);
+
+  // Check wallet connection on mount
+  useEffect(() => {
+    checkWalletConnection();
+    setMetaMaskAvailable(isMetaMaskAvailable());
+    setInitializing(false);
+  }, []);
+
+  // Listen for account changes
+  useEffect(() => {
+    if (!metaMaskAvailable) return;
+
+    const handleAccountsChanged = () => {
+      checkWalletConnection();
+    };
+
+    window.ethereum?.on("accountsChanged", handleAccountsChanged);
+    return () => {
+      window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+    };
+  }, [metaMaskAvailable]);
+
+  const checkWalletConnection = async () => {
+    const result = await getConnectedWallet();
+    if (result.success && result.connected) {
+      setWalletConnected(true);
+      setWalletAddress(result.address);
+      setWalletProvider(result.provider);
+      setWalletSigner(result.signer);
+    } else {
+      setWalletConnected(false);
+      setWalletAddress("");
+    }
+  };
+
+  const handleConnectWallet = async () => {
+    try {
+      setError("");
+      const result = await connectWallet();
+
+      if (!result.success) {
+        setError(result.error || "Failed to connect wallet");
+        return;
+      }
+
+      // Check if on correct network
+      const networkCheck = await isOnCorrectNetwork(result.provider);
+      if (!networkCheck.success || !networkCheck.isCorrect) {
+        // Try to switch to correct network
+        const switchResult = await switchToPolygonAmoy();
+        if (!switchResult.success) {
+          setError("Please switch to Polygon Amoy network in MetaMask");
+          return;
+        }
+      }
+
+      setWalletConnected(true);
+      setWalletAddress(result.address);
+      setWalletProvider(result.provider);
+      setWalletSigner(result.signer);
+    } catch (err) {
+      console.error("Wallet connection error:", err);
+      setError(err.message || "Failed to connect wallet");
+    }
+  };
 
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -66,6 +149,11 @@ export default function UploadEvidence() {
         return;
       }
 
+      if (!walletConnected) {
+        setError("Please connect your wallet first");
+        return;
+      }
+
       setUploading(true);
       setError("");
 
@@ -73,6 +161,7 @@ export default function UploadEvidence() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("description", description);
+      formData.append("walletAddress", walletAddress); // Add wallet address
 
       // Optional fields - convert selected tags to comma-separated string
       const selectedTagsList = Object.keys(selectedTags).filter(
@@ -116,14 +205,21 @@ export default function UploadEvidence() {
 
         setIpfsHash(evidence.ipfsHash);
         setFileHash(evidence.fileHash);
-        setEvidenceId(evidence.evidenceId);
-        setShowHash(true);
+        setEvidenceId(evidence._id); // Use MongoDB _id, not custom evidenceId
 
         console.log("Upload successful:", {
           evidenceId: evidence.evidenceId,
+          mongoDbId: evidence._id,
           ipfsUrl: ipfsUrl,
           fileHash: evidence.fileHash,
         });
+
+        // Sign blockchain transaction immediately
+        await signBlockchainTransaction(
+          evidence._id,
+          evidence.ipfsHash,
+          evidence.fileHash,
+        );
       } else {
         throw new Error(response.data.message || "Upload failed");
       }
@@ -141,6 +237,120 @@ export default function UploadEvidence() {
         // Other errors
         setError(e.message || "Error uploading file");
       }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const signBlockchainTransaction = async (
+    mongoDbId,
+    ipfsHashValue,
+    fileHashValue,
+  ) => {
+    try {
+      setUploading(true);
+
+      if (!walletSigner || !ipfsHashValue || !fileHashValue) {
+        setError("Missing required data for blockchain transaction");
+        setUploading(false);
+        return;
+      }
+
+      if (!mongoDbId) {
+        setError("Evidence ID not found");
+        setUploading(false);
+        return;
+      }
+
+      console.log("🔗 Starting blockchain transaction signing...");
+      console.log("   Evidence ID (MongoDB):", mongoDbId);
+      console.log("   IPFS Hash:", ipfsHashValue);
+      console.log("   File Hash:", fileHashValue);
+
+      // Get contract address from environment or config
+      const contractAddress = "0x876b6e908ac96D3108eE49c42977ad1Cf59274A3";
+
+      // Sign transaction
+      console.log("📝 Signing transaction with wallet...");
+      const txResult = await signEvidenceTransaction(
+        contractAddress,
+        ipfsHashValue,
+        fileHashValue,
+        walletSigner,
+        walletProvider,
+      );
+
+      if (!txResult.success) {
+        setError(txResult.error || "Failed to sign transaction");
+        setUploading(false);
+        return;
+      }
+
+      console.log("✅ Transaction signed:", txResult.transactionHash);
+
+      // Wait for confirmation
+      console.log("⏳ Waiting for blockchain confirmation...");
+      const confirmationResult = await waitForTransactionConfirmation(
+        walletProvider,
+        txResult.transactionHash,
+        1,
+      );
+
+      if (confirmationResult.success) {
+        console.log("✅ Transaction confirmed:", {
+          blockNumber: confirmationResult.blockNumber,
+          gasUsed: confirmationResult.gasUsed,
+        });
+
+        // Update backend with transaction hash
+        console.log("📤 Updating backend with transaction details...");
+        try {
+          const backendResponse = await axios.post(
+            `http://localhost:8000/api/evidence/${mongoDbId}/confirm-blockchain`,
+            {
+              transactionHash: txResult.transactionHash,
+              blockNumber: confirmationResult.blockNumber,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            },
+          );
+
+          if (backendResponse.data.success) {
+            console.log("✅ Backend confirmation successful");
+            setShowHash(true);
+            setError("");
+          } else {
+            setError(
+              backendResponse.data.message || "Backend confirmation failed",
+            );
+          }
+        } catch (backendError) {
+          console.error("❌ Backend error:", backendError);
+          if (backendError.response?.data?.message) {
+            setError(backendError.response.data.message);
+          } else if (backendError.response?.status === 404) {
+            setError(
+              "Evidence not found. Please ensure the file was uploaded correctly.",
+            );
+          } else {
+            setError(
+              backendError.response?.data?.error ||
+                "Failed to confirm transaction on backend. Check server logs.",
+            );
+          }
+        }
+      } else {
+        setError(
+          confirmationResult.error ||
+            "Failed to confirm transaction on blockchain",
+        );
+      }
+    } catch (error) {
+      console.error("❌ Blockchain transaction error:", error);
+      setError(error.message || "Failed to process blockchain transaction");
     } finally {
       setUploading(false);
     }
@@ -170,7 +380,74 @@ export default function UploadEvidence() {
       </div>
 
       <div className="max-w-3xl mx-auto">
-        {/* Error Display */}
+        {/* Wallet Connection Alert */}
+        {!walletConnected && metaMaskAvailable && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <Wallet className="w-5 h-5 text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-blue-900 font-medium mb-2">
+                  Connect Your Wallet
+                </p>
+                <p className="text-xs text-blue-700 mb-3">
+                  Connect MetaMask to securely sign blockchain transactions for
+                  your evidence uploads.
+                </p>
+                <button
+                  onClick={handleConnectWallet}
+                  className="px-4 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Connect MetaMask
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {walletConnected && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <p className="text-xs text-green-700 font-medium">
+                  Wallet Connected: {walletAddress.slice(0, 6)}...
+                  {walletAddress.slice(-4)}
+                </p>
+              </div>
+              <button
+                onClick={() => setWalletConnected(false)}
+                className="text-xs text-green-600 hover:text-green-700"
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!metaMaskAvailable && (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-orange-900 font-medium mb-2">
+                  MetaMask Not Detected
+                </p>
+                <p className="text-xs text-orange-700 mb-3">
+                  Please install MetaMask extension to sign blockchain
+                  transactions.
+                </p>
+                <a
+                  href="https://metamask.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-orange-600 hover:text-orange-700 font-medium"
+                >
+                  Download MetaMask →
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
@@ -197,58 +474,84 @@ export default function UploadEvidence() {
             Select Evidence File
           </h2>
 
-          <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 text-center bg-neutral-50">
-            {uploadedFile ? (
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle2
-                    className="w-6 h-6 text-green-600"
+          {initializing ? (
+            <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 text-center bg-neutral-50 animate-pulse">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-10 h-10 bg-neutral-200 rounded-full mx-auto"></div>
+                <div className="space-y-2 w-full">
+                  <div className="h-4 bg-neutral-200 rounded w-2/3 mx-auto"></div>
+                  <div className="h-3 bg-neutral-200 rounded w-1/2 mx-auto"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 text-center bg-neutral-50">
+              {uploadedFile ? (
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle2
+                      className="w-6 h-6 text-green-600"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                  <p className="text-sm text-neutral-700 mb-1">
+                    {uploadedFile}
+                  </p>
+                  <p className="text-xs text-neutral-500 mb-2">
+                    {(file?.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                  <button
+                    onClick={() => {
+                      setFile(null);
+                      setUploadedFile(null);
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-700 mt-2"
+                    disabled={uploading}
+                  >
+                    Change file
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <Upload
+                    className="w-10 h-10 text-neutral-400 mb-4"
                     strokeWidth={1.5}
                   />
+                  <p className="text-sm text-neutral-700 mb-4">
+                    Select evidence file to upload
+                  </p>
+                  <input
+                    type="file"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="file-upload"
+                    accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                    disabled={!walletConnected || uploading}
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className={`px-6 py-2 text-sm rounded-lg transition-colors cursor-pointer font-medium ${
+                      walletConnected
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-neutral-300 text-neutral-500 cursor-not-allowed"
+                    }`}
+                  >
+                    Choose File
+                  </label>
+                  {!walletConnected && (
+                    <p className="text-xs text-neutral-500 mt-3">
+                      Connect wallet first to upload evidence
+                    </p>
+                  )}
+                  {walletConnected && (
+                    <p className="text-xs text-neutral-500 mt-3">
+                      Max file size: 100MB
+                    </p>
+                  )}
                 </div>
-                <p className="text-sm text-neutral-700 mb-1">{uploadedFile}</p>
-                <p className="text-xs text-neutral-500 mb-2">
-                  {(file?.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-                <button
-                  onClick={() => {
-                    setFile(null);
-                    setUploadedFile(null);
-                  }}
-                  className="text-xs text-blue-600 hover:text-blue-700 mt-2"
-                  disabled={uploading}
-                >
-                  Change file
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <Upload
-                  className="w-10 h-10 text-neutral-400 mb-4"
-                  strokeWidth={1.5}
-                />
-                <p className="text-sm text-neutral-700 mb-4">
-                  Select evidence file to upload
-                </p>
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-upload"
-                  accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-                >
-                  Choose File
-                </label>
-                <p className="text-xs text-neutral-500 mt-3">
-                  Max file size: 100MB
-                </p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Metadata Form */}
@@ -471,215 +774,3 @@ export default function UploadEvidence() {
     </div>
   );
 }
-
-// -------------------------------------------------------------------------- by me
-
-// "use client";
-
-// import { useState } from "react";
-// import { Upload, Hash, CheckCircle2 } from "lucide-react";
-// import axios from "axios";
-
-// export default function UploadEvidence() {
-//   const [file, setFile] = useState(null);
-//   const [url, setUrl] = useState("");
-//   const [uploading, setUploading] = useState(false);
-//   // -----------
-//   const [uploadedFile, setUploadedFile] = useState(null);
-//   const [showHash, setShowHash] = useState(false);
-
-//   const uploadFile = async () => {
-//     try {
-//       if (!file) {
-//         alert("No file selected");
-//         return;
-//       }
-
-//       setUploading(true);
-//       const data = new FormData();
-//       data.set("file", file);
-//       const uploadRequest = await axios.post(
-//         "http://localhost:5000/api/evidence/upload",
-//         data,
-//       );
-//       // const uploadRequest = await fetch("/api/files", {
-//       //   method: "POST",
-//       //   body: data,
-//       // });
-//       const signedUrl = await uploadRequest.json();
-//       setUrl(signedUrl);
-//       setUploading(false);
-//     } catch (e) {
-//       console.log(e);
-//       setUploading(false);
-//       alert("Trouble uploading file");
-//     }
-//   };
-
-//   const handleFileSelect = (e) => {
-//     const file = e.target.files?.[0];
-//     if (file) {
-//       setUploadedFile(file.name);
-//       setShowHash(false);
-//     }
-//   };
-
-//   const handleGenerateHash = () => {
-//     setShowHash(true);
-//   };
-
-//   return (
-//     <div className="p-8">
-//       {/* Header */}
-//       <div className="mb-8">
-//         <h1 className="text-2xl text-neutral-800 mb-2">Upload Evidence</h1>
-//         <p className="text-sm text-neutral-500">
-//           Upload and hash forensic evidence
-//         </p>
-//       </div>
-
-//       <div className="max-w-3xl mx-auto">
-//         {/* Upload Area */}
-//         <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
-//           <h2 className="text-sm text-neutral-700 mb-4">
-//             Select Evidence File
-//           </h2>
-
-//           <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 text-center bg-neutral-50">
-//             {uploadedFile ? (
-//               <div className="flex flex-col items-center">
-//                 <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
-//                   <CheckCircle2
-//                     className="w-6 h-6 text-green-600"
-//                     strokeWidth={1.5}
-//                   />
-//                 </div>
-//                 <p className="text-sm text-neutral-700 mb-1">{uploadedFile}</p>
-//                 <button
-//                   onClick={() => setUploadedFile(null)}
-//                   className="text-xs text-blue-600 hover:text-blue-700 mt-2"
-//                 >
-//                   Change file
-//                 </button>
-//               </div>
-//             ) : (
-//               <div className="flex flex-col items-center">
-//                 <Upload
-//                   className="w-10 h-10 text-neutral-400 mb-4"
-//                   strokeWidth={1.5}
-//                 />
-//                 <p className="text-sm text-neutral-700 mb-4">
-//                   Select evidence file to upload
-//                 </p>
-//                 <input
-//                   type="file"
-//                   onChange={handleFileSelect}
-//                   className="hidden"
-//                   id="file-upload"
-//                 />
-//                 <label
-//                   htmlFor="file-upload"
-//                   className="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-//                 >
-//                   Choose File
-//                 </label>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-
-//         {/* Metadata Form */}
-//         {uploadedFile && (
-//           <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
-//             <h2 className="text-sm text-neutral-700 mb-4">Evidence Details</h2>
-
-//             <div className="space-y-4">
-//               {/* Case ID */}
-//               <div>
-//                 <label className="block text-xs text-neutral-600 mb-2">
-//                   Case ID
-//                 </label>
-//                 <input
-//                   type="text"
-//                   placeholder="e.g., CASE-001"
-//                   className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-//                 />
-//               </div>
-
-//               {/* Evidence Type */}
-//               <div>
-//                 <label className="block text-xs text-neutral-600 mb-2">
-//                   Evidence Type
-//                 </label>
-//                 <select className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-//                   <option>Digital Document</option>
-//                   <option>Image</option>
-//                 </select>
-//               </div>
-
-//               {/* Description */}
-//               <div>
-//                 <label className="block text-xs text-neutral-600 mb-2">
-//                   Description
-//                 </label>
-//                 <textarea
-//                   rows={3}
-//                   placeholder="Brief description of the evidence..."
-//                   className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-//                 />
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Hash Display */}
-//         {uploadedFile && showHash && (
-//           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-//             <div className="flex items-start gap-3">
-//               <Hash
-//                 className="w-5 h-5 text-blue-600 mt-0.5"
-//                 strokeWidth={1.5}
-//               />
-//               <div className="flex-1">
-//                 <p className="text-sm text-blue-900 mb-2">
-//                   SHA-256 Hash Generated
-//                 </p>
-//                 <code className="text-xs text-blue-700 font-mono break-all block bg-white p-3 rounded">
-//                   a3c5f8e2b1d4e7f9c8b2a5d6e3f1b8c4e7a9b2d5f8c1e4b7a3f6d9c2e5b8a1
-//                 </code>
-//                 <p className="text-xs text-blue-700 mt-2">
-//                   ✓ Hash stored on blockchain
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Actions */}
-//         {uploadedFile && (
-//           <div className="flex items-center gap-3 justify-center">
-//             {!showHash ? (
-//               <button
-//                 onClick={uploadFile}
-//                 disabled={uploading}
-//                 className="px-8 py-3 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-//               >
-//                 {uploading ? "Uploading..." : "Generate Hash & Upload"}
-//               </button>
-//             ) : (
-//               <button
-//                 onClick={() => {
-//                   setUploadedFile(null);
-//                   setShowHash(false);
-//                 }}
-//                 className="px-8 py-3 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-//               >
-//                 Upload Complete - Add Another
-//               </button>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }

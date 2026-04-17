@@ -1,9 +1,22 @@
 "use client";
 
 import axios from "axios";
-import { ArrowLeft, Copy, Check, Clock, Download, Eye, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  Copy,
+  Check,
+  Clock,
+  Download,
+  Eye,
+  Upload,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  SkeletonCard,
+  SkeletonBlock,
+  SkeletonListItem,
+} from "@/components/SkeletonLoader";
 
 export default function ChainOfCustodyPage() {
   const router = useRouter();
@@ -103,15 +116,14 @@ export default function ChainOfCustodyPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       setChainOfCustody(response.data.data);
     } catch (err) {
       console.error("Error fetching chain of custody:", err);
       setError(
-        err.response?.data?.message ||
-          "Failed to fetch chain of custody data"
+        err.response?.data?.message || "Failed to fetch chain of custody data",
       );
     } finally {
       setLoading(false);
@@ -128,7 +140,9 @@ export default function ChainOfCustodyPage() {
     return (
       <div className="p-8">
         <div className="text-center">
-          <p className="text-red-600 font-semibold mb-4">No evidence ID provided</p>
+          <p className="text-red-600 font-semibold mb-4">
+            No evidence ID provided
+          </p>
           <button
             onClick={() => router.back()}
             className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition"
@@ -160,8 +174,29 @@ export default function ChainOfCustodyPage() {
       </div>
 
       {loading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="space-y-8">
+          {/* Evidence Details Skeleton */}
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="h-6 bg-neutral-200 rounded w-1/3 mb-6 animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-3 bg-neutral-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Timeline Skeleton */}
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="h-6 bg-neutral-200 rounded w-1/3 mb-6 animate-pulse"></div>
+            <div className="space-y-4">
+              <SkeletonListItem />
+              <SkeletonListItem />
+              <SkeletonListItem />
+            </div>
+          </div>
         </div>
       )}
 
@@ -205,10 +240,7 @@ export default function ChainOfCustodyPage() {
                     <Copy
                       className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0"
                       onClick={() =>
-                        copyToClipboard(
-                          chainOfCustody.evidenceId,
-                          "evidenceId"
-                        )
+                        copyToClipboard(chainOfCustody.evidenceId, "evidenceId")
                       }
                     />
                   )}
@@ -230,10 +262,7 @@ export default function ChainOfCustodyPage() {
                     <Copy
                       className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0"
                       onClick={() =>
-                        copyToClipboard(
-                          chainOfCustody.ipfsHash,
-                          "ipfsHash"
-                        )
+                        copyToClipboard(chainOfCustody.ipfsHash, "ipfsHash")
                       }
                     />
                   )}
@@ -255,10 +284,7 @@ export default function ChainOfCustodyPage() {
                     <Copy
                       className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0"
                       onClick={() =>
-                        copyToClipboard(
-                          chainOfCustody.fileHash,
-                          "fileHash"
-                        )
+                        copyToClipboard(chainOfCustody.fileHash, "fileHash")
                       }
                     />
                   )}
@@ -320,7 +346,7 @@ export default function ChainOfCustodyPage() {
                         onClick={() =>
                           copyToClipboard(
                             chainOfCustody.blockchainTxHash,
-                            "blockchainTxHash"
+                            "blockchainTxHash",
                           )
                         }
                       />
@@ -358,13 +384,14 @@ export default function ChainOfCustodyPage() {
               </span>
             </h2>
 
-            {chainOfCustody.chainOfCustody && chainOfCustody.chainOfCustody.length > 0 ? (
+            {chainOfCustody.chainOfCustody &&
+            chainOfCustody.chainOfCustody.length > 0 ? (
               <div className="space-y-4">
                 {chainOfCustody.chainOfCustody.map((entry, index) => (
                   <div
                     key={entry._id || index}
                     className={`border-l-4 p-4 rounded-lg border-neutral-200 ${getActionColor(
-                      entry.action
+                      entry.action,
                     )}`}
                   >
                     <div className="flex items-start gap-4">
@@ -409,12 +436,8 @@ export default function ChainOfCustodyPage() {
 
                           {entry.reason && (
                             <div>
-                              <p className="text-neutral-500 text-xs">
-                                Reason
-                              </p>
-                              <p className="text-neutral-700">
-                                {entry.reason}
-                              </p>
+                              <p className="text-neutral-500 text-xs">Reason</p>
+                              <p className="text-neutral-700">{entry.reason}</p>
                             </div>
                           )}
 
@@ -467,7 +490,7 @@ export default function ChainOfCustodyPage() {
                 </p>
                 <p className="text-2xl font-bold text-blue-700">
                   {chainOfCustody.chainOfCustody?.filter(
-                    (e) => e.action === "viewed"
+                    (e) => e.action === "viewed",
                   ).length || 0}
                 </p>
               </div>
@@ -477,7 +500,7 @@ export default function ChainOfCustodyPage() {
                 </p>
                 <p className="text-2xl font-bold text-purple-700">
                   {chainOfCustody.chainOfCustody?.filter(
-                    (e) => e.action === "downloaded"
+                    (e) => e.action === "downloaded",
                   ).length || 0}
                 </p>
               </div>
@@ -487,7 +510,7 @@ export default function ChainOfCustodyPage() {
                 </p>
                 <p className="text-2xl font-bold text-green-700">
                   {chainOfCustody.chainOfCustody?.filter(
-                    (e) => e.action === "transferred"
+                    (e) => e.action === "transferred",
                   ).length || 0}
                 </p>
               </div>

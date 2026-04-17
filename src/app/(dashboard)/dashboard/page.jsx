@@ -12,6 +12,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import {
+  SkeletonStatCard,
+  SkeletonChart,
+  SkeletonListItem,
+} from "@/components/SkeletonLoader";
 
 export default function Dashboard() {
   const [evidenceData, setEvidenceData] = useState([]);
@@ -173,32 +178,40 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="bg-white rounded-xl border border-neutral-200 p-6"
-            >
-              <div className="flex items-center justify-center mb-4">
-                <div
-                  className={`w-10 h-10 bg-${stat.color}-50 rounded-lg flex items-center justify-center`}
-                >
-                  <Icon
-                    className={`w-5 h-5 text-${stat.color}-600`}
-                    strokeWidth={1.5}
-                  />
+        {loading ? (
+          <>
+            <SkeletonStatCard />
+            <SkeletonStatCard />
+            <SkeletonStatCard />
+          </>
+        ) : (
+          stats.map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={stat.label}
+                className="bg-white rounded-xl border border-neutral-200 p-6"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div
+                    className={`w-10 h-10 bg-${stat.color}-50 rounded-lg flex items-center justify-center`}
+                  >
+                    <Icon
+                      className={`w-5 h-5 text-${stat.color}-600`}
+                      strokeWidth={1.5}
+                    />
+                  </div>
                 </div>
+                <p className="text-2xl text-neutral-800 mb-1 text-center">
+                  {stat.value}
+                </p>
+                <p className="text-xs text-neutral-500 text-center">
+                  {stat.label}
+                </p>
               </div>
-              <p className="text-2xl text-neutral-800 mb-1 text-center">
-                {stat.value}
-              </p>
-              <p className="text-xs text-neutral-500 text-center">
-                {stat.label}
-              </p>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Chart */}
@@ -207,7 +220,9 @@ export default function Dashboard() {
           <TrendingUp className="w-5 h-5 text-neutral-600" strokeWidth={1.5} />
           <h2 className="text-sm text-neutral-700">Evidence Upload Trend</h2>
         </div>
-        {evidenceTrendData.length > 0 ? (
+        {loading ? (
+          <SkeletonChart />
+        ) : evidenceTrendData.length > 0 ? (
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={evidenceTrendData}>
               <defs>
@@ -255,9 +270,11 @@ export default function Dashboard() {
         <h2 className="text-sm text-neutral-700 mb-4">Recent Activity</h2>
         <div className="space-y-4">
           {loading ? (
-            <div className="text-center text-neutral-500 py-8">
-              <p>Loading recent activity...</p>
-            </div>
+            <>
+              <SkeletonListItem />
+              <SkeletonListItem />
+              <SkeletonListItem />
+            </>
           ) : recentActivity.length > 0 ? (
             recentActivity.map((activity) => (
               <div
