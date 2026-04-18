@@ -2,6 +2,7 @@
 
 import { FolderOpen, Briefcase, CheckCircle2, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import axios from "axios";
 import {
   AreaChart,
@@ -19,6 +20,7 @@ import {
 } from "@/components/SkeletonLoader";
 
 export default function Dashboard() {
+  const pathname = usePathname();
   const [evidenceData, setEvidenceData] = useState([]);
   const [caseData, setCaseData] = useState([]);
   const [error, setError] = useState(null);
@@ -47,6 +49,11 @@ export default function Dashboard() {
       color: "emerald",
     },
   ]);
+
+  // Reset loading state when navigating to dashboard
+  useEffect(() => {
+    setLoading(true);
+  }, [pathname]);
 
   // Update stats when evidenceData changes
   useEffect(() => {
@@ -86,7 +93,7 @@ export default function Dashboard() {
       }
     }
     getEvidence();
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     async function getCases() {
@@ -110,7 +117,7 @@ export default function Dashboard() {
       }
     }
     getCases();
-  }, []);
+  }, [pathname]);
 
   // Fetch evidence upload trend data
   useEffect(() => {
@@ -136,7 +143,7 @@ export default function Dashboard() {
       }
     }
     getEvidenceTrend();
-  }, []);
+  }, [pathname]);
 
   // Fetch recent activity data
   useEffect(() => {
@@ -164,7 +171,7 @@ export default function Dashboard() {
       }
     }
     getRecentActivityData();
-  }, []);
+  }, [pathname]);
 
   return (
     <div className="p-8">
@@ -282,9 +289,11 @@ export default function Dashboard() {
                 className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0"
               >
                 <div>
-                  <p className="text-sm text-neutral-700">{activity.action}</p>
+                  <p className="text-sm text-neutral-700 font-medium">
+                    {activity.user}
+                  </p>
                   <p className="text-xs text-neutral-500 mt-1">
-                    {activity.id} · {activity.user}
+                    {activity.action}
                   </p>
                 </div>
                 <span className="text-xs text-neutral-500">

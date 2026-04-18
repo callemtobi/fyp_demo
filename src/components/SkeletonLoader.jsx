@@ -62,12 +62,29 @@ export function SkeletonCard() {
 // Skeleton for table rows
 export function SkeletonTableRow() {
   return (
-    <div className="bg-white border-b border-neutral-200 p-4 animate-pulse flex gap-4">
-      <div className="flex-1 h-4 bg-neutral-200 rounded"></div>
-      <div className="flex-1 h-4 bg-neutral-200 rounded"></div>
-      <div className="flex-1 h-4 bg-neutral-200 rounded"></div>
-      <div className="w-24 h-4 bg-neutral-200 rounded"></div>
-    </div>
+    <tr className="border-b border-neutral-100 animate-pulse">
+      <td className="px-4 py-3">
+        <div className="h-4 bg-neutral-200 rounded"></div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-4 bg-neutral-200 rounded"></div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-4 bg-neutral-200 rounded"></div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-4 bg-neutral-200 rounded"></div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-4 bg-neutral-200 rounded"></div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="h-4 bg-neutral-200 rounded"></div>
+      </td>
+      <td className="px-4 py-3">
+        <div className="w-6 h-6 bg-neutral-200 rounded"></div>
+      </td>
+    </tr>
   );
 }
 

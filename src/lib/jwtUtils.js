@@ -70,9 +70,44 @@ export const getTokenExpirationTime = (token) => {
  * Clear authentication token and redirect to login
  * @param {function} router - Next.js router object
  */
-export const logout = (router) => {
+export const logout = async (router) => {
+  // Import here to avoid circular dependency
+  const { disconnectWallet } = await import("./walletService");
+
+  // Get token for API call
+  const token = localStorage.getItem("token");
+
+  // Disconnect wallet first
+  try {
+    await disconnectWallet();
+  } catch (error) {
+    console.error("Error disconnecting wallet during logout:", error);
+  }
+
+  // Call backend logout endpoint to update last logout timestamp
+  if (token) {
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/logout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        console.log("Backend logout successful");
+      }
+    } catch (error) {
+      console.error("Error calling backend logout:", error);
+      // Continue with logout even if backend call fails
+    }
+  }
+
+  // Clear authentication data
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+
   if (router) {
     router.push("/login");
   }

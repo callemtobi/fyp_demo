@@ -10,16 +10,18 @@ import {
   Eye,
   Upload,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   SkeletonCard,
   SkeletonBlock,
   SkeletonListItem,
 } from "@/components/SkeletonLoader";
+import EvidenceViewerModal from "@/components/EvidenceViewerModal";
 
 export default function ChainOfCustodyPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const evidenceId = searchParams.get("id");
 
@@ -27,6 +29,7 @@ export default function ChainOfCustodyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copiedHash, setCopiedHash] = useState(null);
+  const [showViewerModal, setShowViewerModal] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -134,7 +137,7 @@ export default function ChainOfCustodyPage() {
     if (evidenceId) {
       fetchChainOfCustody();
     }
-  }, [evidenceId]);
+  }, [evidenceId, pathname]);
 
   if (!evidenceId) {
     return (
@@ -372,6 +375,162 @@ export default function ChainOfCustodyPage() {
                     : "Pending"}
                 </span>
               </div>
+
+              {/* View & Download Buttons */}
+              <div className="md:col-span-2 flex gap-3">
+                <button
+                  onClick={() => setShowViewerModal(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <Eye className="w-4 h-4" />
+                  View Evidence
+                </button>
+                <button
+                  onClick={() => setShowViewerModal(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Evidence
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* First Upload Transaction Details */}
+          {chainOfCustody.chainOfCustody &&
+            chainOfCustody.chainOfCustody.length > 0 &&
+            chainOfCustody.chainOfCustody[0]?.action === "uploaded" && (
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-200 p-6 mb-8">
+                <h2 className="text-lg font-semibold text-neutral-800 mb-6">
+                  First Upload Transaction
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Uploaded By */}
+                  <div>
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                      Uploaded By
+                    </p>
+                    <div>
+                      <p className="text-neutral-800 font-medium">
+                        {chainOfCustody.chainOfCustody[0].user?.name}
+                      </p>
+                      <p className="text-neutral-600 text-sm">
+                        {chainOfCustody.chainOfCustody[0].user?.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Upload Timestamp */}
+                  <div>
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                      Upload Time
+                    </p>
+                    <p className="text-neutral-800">
+                      {formatDate(chainOfCustody.chainOfCustody[0].timestamp)}
+                    </p>
+                  </div>
+
+                  {/* IP Address */}
+                  {chainOfCustody.chainOfCustody[0].ipAddress && (
+                    <div>
+                      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                        Upload IP Address
+                      </p>
+                      <p className="text-neutral-800 font-mono">
+                        {chainOfCustody.chainOfCustody[0].ipAddress}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* User Agent */}
+                  {chainOfCustody.chainOfCustody[0].userAgent && (
+                    <div>
+                      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                        User Agent
+                      </p>
+                      <p className="text-neutral-800 text-sm truncate">
+                        {chainOfCustody.chainOfCustody[0].userAgent}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Transaction Hash if available */}
+                  {chainOfCustody.chainOfCustody[0].txHash && (
+                    <div className="md:col-span-2">
+                      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                        Transaction Hash
+                      </p>
+                      <div className="flex items-center gap-2 group cursor-pointer">
+                        <code className="text-neutral-800 font-mono text-sm break-all">
+                          {truncateHash(
+                            chainOfCustody.chainOfCustody[0].txHash,
+                          )}
+                        </code>
+                        {copiedHash === "uploadTxHash" ? (
+                          <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        ) : (
+                          <Copy
+                            className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0"
+                            onClick={() =>
+                              copyToClipboard(
+                                chainOfCustody.chainOfCustody[0].txHash,
+                                "uploadTxHash",
+                              )
+                            }
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          {/* Statistics Card */}
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <h2 className="text-lg font-semibold text-neutral-800 mb-6">
+              Statistics
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-blue-600 uppercase mb-2">
+                  Total Views
+                </p>
+                <p className="text-2xl font-bold text-blue-700">
+                  {chainOfCustody.chainOfCustody?.filter(
+                    (e) => e.action === "viewed",
+                  ).length || 0}
+                </p>
+              </div>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-purple-600 uppercase mb-2">
+                  Total Downloads
+                </p>
+                <p className="text-2xl font-bold text-purple-700">
+                  {chainOfCustody.chainOfCustody?.filter(
+                    (e) => e.action === "downloaded",
+                  ).length || 0}
+                </p>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-green-600 uppercase mb-2">
+                  Transfers
+                </p>
+                <p className="text-2xl font-bold text-green-700">
+                  {chainOfCustody.chainOfCustody?.filter(
+                    (e) => e.action === "transferred",
+                  ).length || 0}
+                </p>
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-orange-600 uppercase mb-2">
+                  Total Access
+                </p>
+                <p className="text-2xl font-bold text-orange-700">
+                  {chainOfCustody.totalAccess || 0}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -478,52 +637,13 @@ export default function ChainOfCustodyPage() {
             )}
           </div>
 
-          {/* Statistics Card */}
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 className="text-lg font-semibold text-neutral-800 mb-6">
-              Statistics
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-blue-600 uppercase mb-2">
-                  Total Views
-                </p>
-                <p className="text-2xl font-bold text-blue-700">
-                  {chainOfCustody.chainOfCustody?.filter(
-                    (e) => e.action === "viewed",
-                  ).length || 0}
-                </p>
-              </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-purple-600 uppercase mb-2">
-                  Total Downloads
-                </p>
-                <p className="text-2xl font-bold text-purple-700">
-                  {chainOfCustody.chainOfCustody?.filter(
-                    (e) => e.action === "downloaded",
-                  ).length || 0}
-                </p>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-green-600 uppercase mb-2">
-                  Transfers
-                </p>
-                <p className="text-2xl font-bold text-green-700">
-                  {chainOfCustody.chainOfCustody?.filter(
-                    (e) => e.action === "transferred",
-                  ).length || 0}
-                </p>
-              </div>
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-orange-600 uppercase mb-2">
-                  Total Access
-                </p>
-                <p className="text-2xl font-bold text-orange-700">
-                  {chainOfCustody.totalAccess || 0}
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Evidence Viewer Modal */}
+          {showViewerModal && (
+            <EvidenceViewerModal
+              evidenceId={evidenceId}
+              onClose={() => setShowViewerModal(false)}
+            />
+          )}
         </>
       )}
     </div>

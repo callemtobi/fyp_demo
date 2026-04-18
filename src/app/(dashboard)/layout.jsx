@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { initializeAxiosInterceptors } from "@/lib/axiosConfig";
 import { getTokenExpirationTime, isTokenExpired } from "@/lib/jwtUtils";
+import { disconnectWallet } from "@/lib/walletService";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -23,6 +24,9 @@ export default function DashboardLayout({ children }) {
     // Check if token is already expired
     if (isTokenExpired(token)) {
       alert("Your session has expired. Please login again.");
+      disconnectWallet().catch((error) => {
+        console.error("Error disconnecting wallet:", error);
+      });
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       router.push("/login");
@@ -53,6 +57,9 @@ export default function DashboardLayout({ children }) {
       // If expired, logout
       if (remainingTime <= 0) {
         alert("Your session has expired. You are being logged out.");
+        disconnectWallet().catch((error) => {
+          console.error("Error disconnecting wallet:", error);
+        });
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         clearInterval(expirationCheckInterval);

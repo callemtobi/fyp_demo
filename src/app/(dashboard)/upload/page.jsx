@@ -11,7 +11,9 @@ import {
   switchToPolygonAmoy,
   signEvidenceTransaction,
   waitForTransactionConfirmation,
+  disconnectWallet,
 } from "@/lib/walletService";
+import { getTokenExpirationTime } from "@/lib/jwtUtils";
 import { SkeletonBlock, SkeletonCard } from "@/components/SkeletonLoader";
 
 export default function UploadEvidence() {
@@ -68,6 +70,40 @@ export default function UploadEvidence() {
       window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
     };
   }, [metaMaskAvailable]);
+
+  // Monitor token expiration and disconnect wallet if needed
+  useEffect(() => {
+    const tokenExpirationCheckInterval = setInterval(() => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Token removed (user logged out), disconnect wallet
+        if (walletConnected) {
+          disconnectWallet().catch((error) => {
+            console.error("Error disconnecting wallet:", error);
+          });
+          setWalletConnected(false);
+          setWalletAddress("");
+          setWalletProvider(null);
+          setWalletSigner(null);
+        }
+      } else {
+        // Check if token is about to expire or has expired
+        const remainingTime = getTokenExpirationTime(token);
+        if (remainingTime <= 0 && walletConnected) {
+          // Token expired, disconnect wallet
+          disconnectWallet().catch((error) => {
+            console.error("Error disconnecting wallet:", error);
+          });
+          setWalletConnected(false);
+          setWalletAddress("");
+          setWalletProvider(null);
+          setWalletSigner(null);
+        }
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(tokenExpirationCheckInterval);
+  }, [walletConnected]);
 
   const checkWalletConnection = async () => {
     const result = await getConnectedWallet();

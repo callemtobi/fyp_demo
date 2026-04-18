@@ -2,12 +2,13 @@
 
 import axios from "axios";
 import { Eye, Copy, Check, ChainIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SkeletonTableRow } from "@/components/SkeletonLoader";
 
 export default function EvidenceRecords() {
   const router = useRouter();
+  const pathname = usePathname();
   const [error, setError] = useState(null);
   const [evidenceData, setEvidenceData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,28 +41,8 @@ export default function EvidenceRecords() {
     setTimeout(() => setCopiedHash(null), 2000);
   };
 
-  const trackViewAndNavigate = async (evidenceId) => {
-    try {
-      const token = localStorage.getItem("token");
-      // Track the view
-      await axios.post(
-        `http://localhost:8000/api/evidence/${evidenceId}/track-view`,
-        {
-          ipAddress: window.location.hostname,
-          userAgent: navigator.userAgent,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-    } catch (err) {
-      console.warn("Failed to track view:", err);
-    } finally {
-      // Navigate to CoC page regardless of tracking success
-      router.push(`/chainOfCustody?id=${evidenceId}`);
-    }
+  const navigateToCoC = (evidenceId) => {
+    router.push(`/chainOfCustody?id=${evidenceId}`);
   };
 
   const getEvidenceRecords = async () => {
@@ -135,13 +116,13 @@ export default function EvidenceRecords() {
             </thead>
             <tbody>
               {loading ? (
-                <div>
+                <>
                   <SkeletonTableRow />
                   <SkeletonTableRow />
                   <SkeletonTableRow />
                   <SkeletonTableRow />
                   <SkeletonTableRow />
-                </div>
+                </>
               ) : evidenceData.length > 0 ? (
                 evidenceData.map((evidence, index) => (
                   <tr
@@ -199,7 +180,7 @@ export default function EvidenceRecords() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button
-                        onClick={() => trackViewAndNavigate(evidence._id)}
+                        onClick={() => navigateToCoC(evidence._id)}
                         className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors inline-block"
                         title="View Chain of Custody"
                       >

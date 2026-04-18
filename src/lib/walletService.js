@@ -342,3 +342,45 @@ export const getWalletBalance = async (provider, address) => {
     };
   }
 };
+
+/**
+ * Disconnect wallet session
+ */
+export const disconnectWallet = async () => {
+  try {
+    // Clear wallet state from localStorage
+    localStorage.removeItem("walletConnected");
+    localStorage.removeItem("walletAddress");
+
+    // Disconnect from MetaMask by removing permissions
+    if (isMetaMaskAvailable() && window.ethereum?.request) {
+      try {
+        // This removes the connected account from MetaMask's perspective for this dApp
+        await window.ethereum.request({
+          method: "wallet_revokePermissions",
+          params: [
+            {
+              eth_accounts: {},
+            },
+          ],
+        });
+      } catch (revokeError) {
+        // wallet_revokePermissions not supported in all versions, this is fine
+        console.log(
+          "Note: wallet_revokePermissions not supported, but session cleared",
+        );
+      }
+    }
+
+    return {
+      success: true,
+      message: "Wallet disconnected successfully",
+    };
+  } catch (error) {
+    console.error("Error disconnecting wallet:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};

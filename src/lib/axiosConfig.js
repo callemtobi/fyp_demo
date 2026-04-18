@@ -1,5 +1,6 @@
 import axios from "axios";
 import { logout } from "./jwtUtils";
+import { disconnectWallet } from "./walletService";
 
 let router = null;
 
@@ -25,6 +26,13 @@ export const initializeAxiosInterceptors = (nextRouter) => {
         // Show alert to user
         alert("Your session has expired. Please login again.");
 
+        // Disconnect wallet first
+        try {
+          await disconnectWallet();
+        } catch (walletError) {
+          console.error("Error disconnecting wallet:", walletError);
+        }
+
         // Clear token and redirect to login
         logout(router);
 
@@ -35,6 +43,13 @@ export const initializeAxiosInterceptors = (nextRouter) => {
       if (error.response?.status === 401) {
         // Show alert to user
         alert("Session expired or invalid. Please login again.");
+
+        // Disconnect wallet first
+        try {
+          await disconnectWallet();
+        } catch (walletError) {
+          console.error("Error disconnecting wallet:", walletError);
+        }
 
         // Clear token and redirect to login
         logout(router);
