@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Briefcase,
   Upload,
   FolderOpen,
   GitCompare,
@@ -18,12 +19,13 @@ import { logout } from "@/lib/jwtUtils";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/case", label: "Create Case", icon: Briefcase },
   { path: "/upload", label: "Upload Evidence", icon: Upload },
   { path: "/records", label: "Evidence Records", icon: FolderOpen },
-  { path: "/comparison", label: "Evidence Comparison", icon: GitCompare },
-  { path: "/reports", label: "Reports", icon: FileText },
-  { path: "/accessControl", label: "Access Control", icon: Shield },
-  { path: "/settings", label: "Settings", icon: SettingsIcon },
+  // { path: "/comparison", label: "Evidence Comparison", icon: GitCompare },
+  // { path: "/reports", label: "Reports", icon: FileText },
+  // { path: "/accessControl", label: "Access Control", icon: Shield },
+  // { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export default function Sidebar() {
@@ -113,16 +115,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-// ```
-
-// ---
-
-// ## How It Works After the Fix
-// ```
-// User clicks "Reports" in sidebar
-//         ↓
-// Next.js navigates to /reports
-//         ↓
-// layout.js renders: <Sidebar /> + <reports/page.jsx as children>
-//         ↓
-// Sidebar stays visible, content loads on the right ✅

@@ -14,7 +14,6 @@ import {
   disconnectWallet,
 } from "@/lib/walletService";
 import { getTokenExpirationTime } from "@/lib/jwtUtils";
-import { SkeletonBlock, SkeletonCard } from "@/components/SkeletonLoader";
 
 export default function UploadEvidence() {
   const [file, setFile] = useState(null);
