@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, Hash, CheckCircle2, AlertCircle, Wallet } from "lucide-react";
+import { Upload, CheckCircle2, AlertCircle, Wallet } from "lucide-react";
 import axios from "axios";
 import {
   connectWallet,
@@ -15,31 +15,53 @@ import {
 } from "@/lib/walletService";
 import { getTokenExpirationTime } from "@/lib/jwtUtils";
 
+const ACCEPTED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/jpg",
+  "application/pdf",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+];
+
+const availableTags = [
+  "forensic",
+  "chain-of-custody",
+  "verified",
+  "witness-statement",
+  "digital-forensics",
+  "surveillance",
+];
+
 export default function UploadEvidence() {
-  const [file, setFile] = useState(null);
-  const [uploadedFile, setUploadedFile] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [filePreviewUrls, setFilePreviewUrls] = useState({});
+  const [fileDurations, setFileDurations] = useState({});
   const [uploading, setUploading] = useState(false);
   const [showHash, setShowHash] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
+  const [cases, setCases] = useState([]);
+  const [loadingCases, setLoadingCases] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState("");
+
   // Form data
-  const [evidenceType, setEvidenceType] = useState("");
+  const [evidenceTitle, setEvidenceTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [source, setSource] = useState("");
+  const [location, setLocation] = useState("");
+  const [dateCollected, setDateCollected] = useState("");
+  const [incidentDate, setIncidentDate] = useState("");
+  const [collectedBy, setCollectedBy] = useState("");
+  const [deviceInfo, setDeviceInfo] = useState("");
+  const [notes, setNotes] = useState("");
   const [selectedTags, setSelectedTags] = useState({});
-  const allowedTypes = ["Digital Document", "Image", "Other"];
-  const availableTags = [
-    "forensic",
-    "chain-of-custody",
-    "verified",
-    "witness-statement",
-    "digital-forensics",
-    "surveillance",
-  ];
 
   // Response data
-  const [ipfsHash, setIpfsHash] = useState("");
-  const [fileHash, setFileHash] = useState("");
-  const [evidenceId, setEvidenceId] = useState("");
+  const [uploadedEvidences, setUploadedEvidences] = useState([]);
   const [error, setError] = useState("");
 
   // Wallet state
@@ -53,6 +75,7 @@ export default function UploadEvidence() {
   useEffect(() => {
     checkWalletConnection();
     setMetaMaskAvailable(isMetaMaskAvailable());
+    fetchCases();
     setInitializing(false);
   }, []);
 
@@ -104,6 +127,49 @@ export default function UploadEvidence() {
     return () => clearInterval(tokenExpirationCheckInterval);
   }, [walletConnected]);
 
+  useEffect(() => {
+    const nextPreviewUrls = {};
+    files.forEach((file) => {
+      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+      if (
+        file.type.startsWith("image/") ||
+        file.type.startsWith("video/") ||
+        file.type === "application/pdf"
+      ) {
+        nextPreviewUrls[fileKey] = URL.createObjectURL(file);
+      }
+    });
+
+    setFilePreviewUrls(nextPreviewUrls);
+
+    return () => {
+      Object.values(nextPreviewUrls).forEach((previewUrl) => {
+        URL.revokeObjectURL(previewUrl);
+      });
+    };
+  }, [files]);
+
+  const fetchCases = async () => {
+    try {
+      setLoadingCases(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:8000/api/cases", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data?.success) {
+        setCases(response.data.data || []);
+      }
+    } catch (fetchError) {
+      console.error("Error fetching cases:", fetchError);
+      setError(fetchError.response?.data?.message || "Failed to load cases");
+    } finally {
+      setLoadingCases(false);
+    }
+  };
+
   const checkWalletConnection = async () => {
     const result = await getConnectedWallet();
     if (result.success && result.connected) {
@@ -148,14 +214,88 @@ export default function UploadEvidence() {
     }
   };
 
-  const handleFileSelect = (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setUploadedFile(selectedFile.name);
+  const getVideoDuration = (file) =>
+    new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration || 0);
+      };
+      video.onerror = () => reject(new Error("Unable to read video metadata"));
+      video.src = window.URL.createObjectURL(file);
+    });
+
+  const handleFileSelect = async (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
+
+    try {
+      const durations = {};
+      for (const selectedFile of selectedFiles) {
+        if (!ACCEPTED_MIME_TYPES.includes(selectedFile.type)) {
+          throw new Error(
+            `${selectedFile.name}: only images, PDFs, and videos are allowed.`,
+          );
+        }
+
+        if (selectedFile.type.startsWith("video/")) {
+          const videoDuration = await getVideoDuration(selectedFile);
+          if (videoDuration > 10) {
+            throw new Error(
+              `${selectedFile.name}: video must be 10 seconds or less.`,
+            );
+          }
+          durations[selectedFile.name] = Number(videoDuration.toFixed(2));
+        }
+      }
+
+      setFiles((prevFiles) => {
+        const existingKeys = new Set(
+          prevFiles.map(
+            (file) => `${file.name}-${file.size}-${file.lastModified}`,
+          ),
+        );
+        const dedupedNewFiles = selectedFiles.filter((file) => {
+          const key = `${file.name}-${file.size}-${file.lastModified}`;
+          return !existingKeys.has(key);
+        });
+        return [...prevFiles, ...dedupedNewFiles];
+      });
+
+      setFileDurations((prevDurations) => ({
+        ...prevDurations,
+        ...durations,
+      }));
       setShowHash(false);
+      setUploadedEvidences([]);
       setError("");
+    } catch (selectError) {
+      setError(selectError.message || "Invalid file selection");
+      setFiles([]);
+      setFilePreviewUrls({});
+      setFileDurations({});
     }
+
+    e.target.value = "";
+  };
+
+  const removeEvidenceFile = (fileToRemove) => {
+    setFiles((prevFiles) =>
+      prevFiles.filter(
+        (file) =>
+          !(
+            file.name === fileToRemove.name &&
+            file.size === fileToRemove.size &&
+            file.lastModified === fileToRemove.lastModified
+          ),
+      ),
+    );
+    setFileDurations((prevDurations) => {
+      const nextDurations = { ...prevDurations };
+      delete nextDurations[fileToRemove.name];
+      return nextDurations;
+    });
   };
 
   const handleTagToggle = (tag) => {
@@ -168,19 +308,22 @@ export default function UploadEvidence() {
   const uploadFile = async () => {
     try {
       // Validation
-      if (!file) {
-        setError("No file selected");
+      if (!selectedCaseId) {
+        setError("Please select a case before uploading evidence");
         return;
       }
 
-      if (!description.trim()) {
-        setError("Description is required");
+      if (!files.length) {
+        setError("No files selected");
         return;
       }
-      if (!allowedTypes.includes(evidenceType)) {
-        setError(
-          "Please select either 'Digital Document', 'Image', or 'Other'",
-        );
+
+      if (!evidenceTitle.trim()) {
+        setError("Evidence title is required");
+        return;
+      }
+      if (!description.trim()) {
+        setError("Description is required");
         return;
       }
 
@@ -194,9 +337,13 @@ export default function UploadEvidence() {
 
       // Create FormData
       const formData = new FormData();
-      formData.append("file", file);
+      files.forEach((selectedFile) => {
+        formData.append("files", selectedFile);
+      });
+      formData.append("caseId", selectedCaseId);
+      formData.append("evidenceTitle", evidenceTitle);
       formData.append("description", description);
-      formData.append("walletAddress", walletAddress); // Add wallet address
+      formData.append("walletAddress", walletAddress);
 
       // Optional fields - convert selected tags to comma-separated string
       const selectedTagsList = Object.keys(selectedTags).filter(
@@ -208,19 +355,20 @@ export default function UploadEvidence() {
 
       // Add metadata as JSON string
       const metadata = {
-        evidenceType: evidenceType,
+        evidenceTitle: evidenceTitle.trim(),
+        source: source.trim(),
+        location: location.trim(),
+        incidentDate: incidentDate || null,
+        dateCollected: dateCollected || null,
+        collectedBy: collectedBy.trim(),
+        deviceInfo: deviceInfo.trim(),
+        notes: notes.trim(),
         uploadDate: new Date().toISOString(),
       };
       formData.append("metadata", JSON.stringify(metadata));
+      formData.append("fileDurations", JSON.stringify(fileDurations));
 
-      // Get auth token from localStorage (adjust based on your auth implementation)
       const token = localStorage.getItem("token");
-      console.log(token);
-      if (!token) {
-        // alert("Please login first!");
-        console.log("No token found");
-        // return;
-      }
 
       // Upload to backend
       const response = await axios.post(
@@ -236,25 +384,22 @@ export default function UploadEvidence() {
 
       // Handle successful upload
       if (response.data.success) {
-        const { evidence, ipfsUrl } = response.data.data;
+        const evidences = response.data.data?.evidences || [];
+        if (!evidences.length) {
+          throw new Error("No evidence data returned from server");
+        }
 
-        setIpfsHash(evidence.ipfsHash);
-        setFileHash(evidence.fileHash);
-        setEvidenceId(evidence._id); // Use MongoDB _id, not custom evidenceId
+        setUploadedEvidences(evidences);
 
-        console.log("Upload successful:", {
-          evidenceId: evidence.evidenceId,
-          mongoDbId: evidence._id,
-          ipfsUrl: ipfsUrl,
-          fileHash: evidence.fileHash,
-        });
+        for (const evidence of evidences) {
+          await signBlockchainTransaction(
+            evidence._id,
+            evidence.ipfsHash,
+            evidence.fileHash,
+          );
+        }
 
-        // Sign blockchain transaction immediately
-        await signBlockchainTransaction(
-          evidence._id,
-          evidence.ipfsHash,
-          evidence.fileHash,
-        );
+        setShowHash(true);
       } else {
         throw new Error(response.data.message || "Upload failed");
       }
@@ -355,7 +500,6 @@ export default function UploadEvidence() {
 
           if (backendResponse.data.success) {
             console.log("✅ Backend confirmation successful");
-            setShowHash(true);
             setError("");
           } else {
             setError(
@@ -392,15 +536,22 @@ export default function UploadEvidence() {
   };
 
   const resetForm = () => {
-    setFile(null);
-    setUploadedFile(null);
+    setFiles([]);
+    setFilePreviewUrls({});
+    setFileDurations({});
     setShowHash(false);
+    setSelectedCaseId("");
+    setEvidenceTitle("");
     setDescription("");
-    setEvidenceType("");
+    setSource("");
+    setLocation("");
+    setDateCollected("");
+    setIncidentDate("");
+    setCollectedBy("");
+    setDeviceInfo("");
+    setNotes("");
     setSelectedTags({});
-    setIpfsHash("");
-    setFileHash("");
-    setEvidenceId("");
+    setUploadedEvidences([]);
     setError("");
   };
 
@@ -505,9 +656,36 @@ export default function UploadEvidence() {
 
         {/* Upload Area */}
         <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
+          <h2 className="text-sm text-neutral-700 mb-4">Select Case</h2>
+          <select
+            value={selectedCaseId}
+            onChange={(e) => setSelectedCaseId(e.target.value)}
+            disabled={uploading || loadingCases}
+            className="w-full mb-6 px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+          >
+            <option value="">
+              {loadingCases ? "Loading cases..." : "Choose a case to continue"}
+            </option>
+            {cases.map((caseItem) => (
+              <option key={caseItem._id} value={caseItem._id}>
+                {caseItem.caseNumber} - {caseItem.title}
+              </option>
+            ))}
+          </select>
+
           <h2 className="text-sm text-neutral-700 mb-4">
-            Select Evidence File
+            Select Evidence Files
           </h2>
+
+          <input
+            type="file"
+            onChange={handleFileSelect}
+            className="hidden"
+            id="file-upload"
+            accept="image/*,video/mp4,video/webm,video/quicktime,.pdf"
+            multiple
+            disabled={!walletConnected || uploading || !selectedCaseId}
+          />
 
           {initializing ? (
             <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 text-center bg-neutral-50 animate-pulse">
@@ -521,7 +699,7 @@ export default function UploadEvidence() {
             </div>
           ) : (
             <div className="border-2 border-dashed border-neutral-300 rounded-xl p-12 text-center bg-neutral-50">
-              {uploadedFile ? (
+              {files.length > 0 ? (
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
                     <CheckCircle2
@@ -530,21 +708,33 @@ export default function UploadEvidence() {
                     />
                   </div>
                   <p className="text-sm text-neutral-700 mb-1">
-                    {uploadedFile}
+                    {files.length} file(s) selected
                   </p>
-                  <p className="text-xs text-neutral-500 mb-2">
-                    {(file?.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                  <button
-                    onClick={() => {
-                      setFile(null);
-                      setUploadedFile(null);
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-700 mt-2"
-                    disabled={uploading}
-                  >
-                    Change file
-                  </button>
+                  <ul className="text-xs text-neutral-500 mb-2 text-left max-h-36 overflow-y-auto">
+                    {files.map((file) => (
+                      <li key={file.name}>
+                        {file.name} - {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center gap-3 mt-3">
+                    <label
+                      htmlFor="file-upload"
+                      className="text-xs text-blue-600 hover:text-blue-700 cursor-pointer"
+                    >
+                      Add more evidence
+                    </label>
+                    <button
+                      onClick={() => {
+                        setFiles([]);
+                        setFileDurations({});
+                      }}
+                      className="text-xs text-red-600 hover:text-red-700"
+                      disabled={uploading}
+                    >
+                      Clear all
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
@@ -555,66 +745,140 @@ export default function UploadEvidence() {
                   <p className="text-sm text-neutral-700 mb-4">
                     Select evidence file to upload
                   </p>
-                  <input
-                    type="file"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    id="file-upload"
-                    accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                    disabled={!walletConnected || uploading}
-                  />
                   <label
                     htmlFor="file-upload"
                     className={`px-6 py-2 text-sm rounded-lg transition-colors cursor-pointer font-medium ${
-                      walletConnected
+                      walletConnected && selectedCaseId
                         ? "bg-blue-600 text-white hover:bg-blue-700"
                         : "bg-neutral-300 text-neutral-500 cursor-not-allowed"
                     }`}
                   >
-                    Choose File
+                    Choose Files
                   </label>
-                  {!walletConnected && (
+                  {!selectedCaseId && (
+                    <p className="text-xs text-neutral-500 mt-3">
+                      Select a case first
+                    </p>
+                  )}
+                  {!walletConnected && selectedCaseId && (
                     <p className="text-xs text-neutral-500 mt-3">
                       Connect wallet first to upload evidence
                     </p>
                   )}
-                  {walletConnected && (
+                  {walletConnected && selectedCaseId && (
                     <p className="text-xs text-neutral-500 mt-3">
-                      Max file size: 100MB
+                      Images/PDF allowed, videos must be 10 seconds max
                     </p>
                   )}
                 </div>
               )}
             </div>
           )}
+
+          {files.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm text-neutral-700">Selected Evidences</h3>
+                <label
+                  htmlFor="file-upload"
+                  className={`text-xs font-medium ${
+                    uploading
+                      ? "text-neutral-400 cursor-not-allowed"
+                      : "text-blue-600 hover:text-blue-700 cursor-pointer"
+                  }`}
+                >
+                  + Add more evidence
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {files.map((file) => {
+                  const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+                  const previewUrl = filePreviewUrls[fileKey];
+
+                  return (
+                    <div
+                      key={fileKey}
+                      className="border border-neutral-200 rounded-lg p-3 bg-neutral-50"
+                    >
+                      <div className="h-40 bg-white rounded border border-neutral-200 flex items-center justify-center overflow-hidden mb-3">
+                        {file.type.startsWith("image/") && previewUrl ? (
+                          <img
+                            src={previewUrl}
+                            alt={file.name}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : file.type.startsWith("video/") && previewUrl ? (
+                          <video
+                            src={previewUrl}
+                            controls
+                            className="w-full h-full object-contain"
+                          />
+                        ) : file.type === "application/pdf" && previewUrl ? (
+                          <iframe
+                            src={previewUrl}
+                            title={file.name}
+                            className="w-full h-full"
+                          />
+                        ) : (
+                          <span className="text-xs text-neutral-500">
+                            Preview unavailable
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-neutral-700 font-medium truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-[11px] text-neutral-500 mt-1">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                      {file.type.startsWith("video/") &&
+                        fileDurations[file.name] !== undefined && (
+                          <p className="text-[11px] text-neutral-500 mt-1">
+                            Duration: {fileDurations[file.name]}s
+                          </p>
+                        )}
+                      <button
+                        onClick={() => removeEvidenceFile(file)}
+                        className="text-[11px] text-red-600 hover:text-red-700 mt-2"
+                        disabled={uploading}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {files.length === 0 && (
+            <p className="text-xs text-red-500 mt-4">
+              Minimum one evidence is required to initiate evidence.
+            </p>
+          )}
         </div>
 
         {/* Metadata Form */}
-        {uploadedFile && !showHash && (
+        {files.length > 0 && !showHash && (
           <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
             <h2 className="text-sm text-neutral-700 mb-4">Evidence Details</h2>
 
             <div className="space-y-4">
-              {/* Evidence Type */}
+              {/* Evidence Title */}
               <div>
                 <label className="block text-xs text-neutral-600 mb-2">
-                  Evidence Type
+                  Evidence Title <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={evidenceType}
-                  onChange={(e) => setEvidenceType(e.target.value)}
+                <input
+                  type="text"
+                  value={evidenceTitle}
+                  onChange={(e) => setEvidenceTitle(e.target.value)}
                   disabled={uploading}
+                  placeholder="e.g. CCTV footage from front entrance"
                   className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                >
-                  <option value="">Select...</option>
-                  <option>Digital Document</option>
-                  <option>Image</option>
-                  {/* <option>Video</option>
-                  <option>Audio</option>
-                  <option>Database Export</option>
-                  <option>Log File</option> */}
-                  <option>Other</option>
-                </select>
+                />
               </div>
 
               {/* Description */}
@@ -631,6 +895,64 @@ export default function UploadEvidence() {
                   className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
                 />
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Source (camera, witness, seized device)"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  placeholder="Collection location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+                <input
+                  type="datetime-local"
+                  value={incidentDate}
+                  onChange={(e) => setIncidentDate(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+                <input
+                  type="datetime-local"
+                  value={dateCollected}
+                  onChange={(e) => setDateCollected(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  placeholder="Collected by"
+                  value={collectedBy}
+                  onChange={(e) => setCollectedBy(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+                <input
+                  type="text"
+                  placeholder="Device / file origin details"
+                  value={deviceInfo}
+                  onChange={(e) => setDeviceInfo(e.target.value)}
+                  disabled={uploading}
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                />
+              </div>
+
+              <textarea
+                rows={2}
+                placeholder="Additional notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                disabled={uploading}
+                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50"
+              />
 
               {/* Tags */}
               <div>
@@ -663,7 +985,7 @@ export default function UploadEvidence() {
         )}
 
         {/* Hash Display */}
-        {uploadedFile && showHash && (
+        {files.length > 0 && showHash && (
           <div className="space-y-4 mb-6">
             {/* Evidence ID - Prominent Display */}
             {/* Success Message */}
@@ -681,76 +1003,37 @@ export default function UploadEvidence() {
               </div>
             </div>
 
-            <div className="bg-orange-50 border border-orange-300 rounded-xl p-6 shadow-lg">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg font-bold text-orange-700">ID</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs text-orange-600 font-semibold mb-2 uppercase tracking-wide">
-                    Evidence Identification
-                  </p>
-                  <code className="text-lg text-orange-900 font-bold font-mono break-all block bg-white p-4 rounded-lg border border-orange-200 mb-2">
-                    {evidenceId}
-                  </code>
-                  <p className="text-xs text-orange-700">
-                    ⚠️ Save this ID for reference and tracking
-                  </p>
-                </div>
+            {uploadedEvidences.map((evidence) => (
+              <div
+                key={evidence._id}
+                className="bg-blue-50 border border-blue-200 rounded-xl p-6"
+              >
+                <p className="text-sm text-blue-900 font-medium mb-2">
+                  {evidence.evidenceId}
+                </p>
+                <p className="text-xs text-blue-700 mb-1">SHA-256</p>
+                <code className="text-xs text-blue-700 font-mono break-all block bg-white p-3 rounded mb-3">
+                  {evidence.fileHash}
+                </code>
+                <p className="text-xs text-blue-700 mb-1">IPFS CID</p>
+                <code className="text-xs text-blue-700 font-mono break-all block bg-white p-3 rounded mb-2">
+                  {evidence.ipfsHash}
+                </code>
+                <a
+                  href={`https://gateway.pinata.cloud/ipfs/${evidence.ipfsHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-700 hover:underline"
+                >
+                  → View on IPFS Gateway
+                </a>
               </div>
-            </div>
-
-            {/* File Hash */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <div className="flex items-start gap-3">
-                <Hash
-                  className="w-5 h-5 text-blue-600 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-blue-900 mb-2 font-medium">
-                    SHA-256 File Hash
-                  </p>
-                  <code className="text-xs text-blue-700 font-mono break-all block bg-white p-3 rounded">
-                    {fileHash}
-                  </code>
-                  <p className="text-xs text-blue-700 mt-2">
-                    ✓ Use this hash to verify file integrity
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* IPFS Hash */}
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-              <div className="flex items-start gap-3">
-                <Hash
-                  className="w-5 h-5 text-purple-600 mt-0.5"
-                  strokeWidth={1.5}
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-purple-900 mb-2 font-medium">
-                    IPFS Hash (CID)
-                  </p>
-                  <code className="text-xs text-purple-700 font-mono break-all block bg-white p-3 rounded">
-                    {ipfsHash}
-                  </code>
-                  <a
-                    href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-purple-700 mt-2 inline-block hover:underline"
-                  >
-                    → View on IPFS Gateway
-                  </a>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         )}
 
         {/* Actions */}
-        {uploadedFile && (
+        {files.length > 0 && (
           <div className="flex items-center gap-3 justify-center">
             {!showHash ? (
               <>
@@ -763,7 +1046,12 @@ export default function UploadEvidence() {
                 </button>
                 <button
                   onClick={uploadFile}
-                  disabled={uploading || !description.trim() || !evidenceType}
+                  disabled={
+                    uploading ||
+                    !description.trim() ||
+                    !evidenceTitle.trim() ||
+                    !selectedCaseId
+                  }
                   className="px-8 py-3 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
@@ -791,7 +1079,7 @@ export default function UploadEvidence() {
                       Uploading...
                     </span>
                   ) : (
-                    "Generate Hash & Upload"
+                    "Generate Hashes & Upload"
                   )}
                 </button>
               </>

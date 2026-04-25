@@ -1,14 +1,13 @@
 "use client";
 
 import axios from "axios";
-import { Eye, Copy, Check, ChainIcon } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { Eye, Copy, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SkeletonTableRow } from "@/components/SkeletonLoader";
 
 export default function EvidenceRecords() {
   const router = useRouter();
-  const pathname = usePathname();
   const [error, setError] = useState(null);
   const [evidenceData, setEvidenceData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +42,15 @@ export default function EvidenceRecords() {
 
   const navigateToCoC = (evidenceId) => {
     router.push(`/chainOfCustody?id=${evidenceId}`);
+  };
+
+  const getCaseDisplayValue = (caseRef) => {
+    if (!caseRef) return "-";
+    if (typeof caseRef === "string") return caseRef;
+    if (typeof caseRef === "object") {
+      return caseRef.caseNumber || caseRef._id || "-";
+    }
+    return "-";
   };
 
   const getEvidenceRecords = async () => {
@@ -154,7 +162,7 @@ export default function EvidenceRecords() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-neutral-700 truncate block max-w-xs">
-                        {evidence.caseId || "-"}
+                        {getCaseDisplayValue(evidence.caseId)}
                       </span>
                     </td>
                     <td className="px-4 py-3">

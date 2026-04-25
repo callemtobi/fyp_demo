@@ -19,11 +19,11 @@ import { logout } from "@/lib/jwtUtils";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/case", label: "Create Case", icon: Briefcase },
+  { path: "/caseCreation", label: "Create Case", icon: Briefcase },
   { path: "/upload", label: "Upload Evidence", icon: Upload },
+  { path: "/reports", label: "Case Reports", icon: FileText },
+  { path: "/comparison", label: "Case Comparison", icon: GitCompare },
   { path: "/records", label: "Evidence Records", icon: FolderOpen },
-  // { path: "/comparison", label: "Evidence Comparison", icon: GitCompare },
-  // { path: "/reports", label: "Reports", icon: FileText },
   // { path: "/accessControl", label: "Access Control", icon: Shield },
   // { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];

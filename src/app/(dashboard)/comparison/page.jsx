@@ -7,9 +7,9 @@ export default function EvidenceComparison() {
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl text-neutral-800 mb-2">Evidence Comparison</h1>
+        <h1 className="text-2xl text-neutral-800 mb-2">Case Comparison</h1>
         <p className="text-sm text-neutral-500">
-          Compare evidence hashes for integrity verification
+          Compare cases for similarities and evidence matches
         </p>
       </div>
 
@@ -23,10 +23,10 @@ export default function EvidenceComparison() {
             />
             <div>
               <h2 className="text-sm text-green-900 mb-1">
-                Evidence Match Confirmed
+                Case Match Confirmed
               </h2>
               <p className="text-xs text-green-700">
-                Hash values match - Evidence integrity verified
+                Similarities found - Cases are related
               </p>
             </div>
           </div>
@@ -36,11 +36,11 @@ export default function EvidenceComparison() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Evidence 1 */}
           <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 className="text-sm text-neutral-700 mb-4">Evidence A</h2>
+            <h2 className="text-sm text-neutral-700 mb-4">Case 1</h2>
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-neutral-600 mb-1">Evidence ID</p>
-                <p className="text-sm text-neutral-800 font-mono">EV-001</p>
+                <p className="text-xs text-neutral-600 mb-1">Case ID</p>
+                <p className="text-sm text-neutral-800 font-mono">CASE-001</p>
               </div>
               <div>
                 <p className="text-xs text-neutral-600 mb-1">Hash</p>
@@ -57,11 +57,11 @@ export default function EvidenceComparison() {
 
           {/* Evidence 2 */}
           <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h2 className="text-sm text-neutral-700 mb-4">Evidence B</h2>
+            <h2 className="text-sm text-neutral-700 mb-4">Case 2</h2>
             <div className="space-y-3">
               <div>
-                <p className="text-xs text-neutral-600 mb-1">Evidence ID</p>
-                <p className="text-sm text-neutral-800 font-mono">EV-001-COPY</p>
+                <p className="text-xs text-neutral-600 mb-1">Case ID</p>
+                <p className="text-sm text-neutral-800 font-mono">CASE-002</p>
               </div>
               <div>
                 <p className="text-xs text-neutral-600 mb-1">Hash</p>
@@ -71,7 +71,7 @@ export default function EvidenceComparison() {
               </div>
               <div>
                 <p className="text-xs text-neutral-600 mb-1">Case ID</p>
-                <p className="text-sm text-neutral-800">CASE-001</p>
+                <p className="text-sm text-neutral-800">CASE-002</p>
               </div>
             </div>
           </div>
@@ -79,7 +79,9 @@ export default function EvidenceComparison() {
 
         {/* Comparison Results */}
         <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
-          <h2 className="text-sm text-neutral-700 mb-4">Verification Results</h2>
+          <h2 className="text-sm text-neutral-700 mb-4">
+            Verification Results
+          </h2>
           <div className="space-y-3">
             <div className="flex items-center justify-between py-3 border-b border-neutral-100">
               <p className="text-sm text-neutral-700">Hash Match</p>
@@ -106,7 +108,9 @@ export default function EvidenceComparison() {
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
-              <p className="text-sm text-neutral-700">Blockchain Verification</p>
+              <p className="text-sm text-neutral-700">
+                Blockchain Verification
+              </p>
               <div className="flex items-center gap-2">
                 <CheckCircle2
                   className="w-4 h-4 text-green-600"
