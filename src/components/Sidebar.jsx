@@ -22,8 +22,8 @@ const navItems = [
   { path: "/caseCreation", label: "Create Case", icon: Briefcase },
   { path: "/upload", label: "Upload Evidence", icon: Upload },
   { path: "/reports", label: "Case Reports", icon: FileText },
-  { path: "/comparison", label: "Case Comparison", icon: GitCompare },
   { path: "/records", label: "Evidence Records", icon: FolderOpen },
+  { path: "/comparison", label: "Case Comparison", icon: GitCompare },
   // { path: "/accessControl", label: "Access Control", icon: Shield },
   // { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];

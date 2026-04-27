@@ -309,6 +309,41 @@ export default function CaseDetail() {
               </div>
             )}
           </div>
+
+          {/* Case Analysis Summary Section */}
+          {caseData.caseAnalysisSummary && (
+            <>
+              {/* Case Summary */}
+              {caseData.caseAnalysisSummary.caseSummary && (
+                <div className="bg-white rounded-lg border border-neutral-200 p-6 mt-8">
+                  <h2 className="text-lg font-semibold text-neutral-800 mb-4">
+                    Case Analysis Summary
+                  </h2>
+                  <div className="prose prose-sm max-w-none text-neutral-700 whitespace-pre-wrap leading-relaxed">
+                    {caseData.caseAnalysisSummary.caseSummary}
+                  </div>
+                  {caseData.caseAnalysisSummary.lastUpdated && (
+                    <p className="text-xs text-neutral-500 mt-4">
+                      Last updated:{" "}
+                      {formatDate(caseData.caseAnalysisSummary.lastUpdated)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Evidence Summary */}
+              {caseData.caseAnalysisSummary.evidenceSummary && (
+                <div className="bg-white rounded-lg border border-neutral-200 p-6 mt-8">
+                  <h2 className="text-lg font-semibold text-neutral-800 mb-4">
+                    Evidence Analysis Summary
+                  </h2>
+                  <div className="prose prose-sm max-w-none text-neutral-700 whitespace-pre-wrap leading-relaxed">
+                    {caseData.caseAnalysisSummary.evidenceSummary}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </>
       )}
 

@@ -55,17 +55,13 @@ export default function CasePage({ onSuccess, onCancel }) {
   });
 
   const [officers, setOfficers] = useState([]);
-  const [showCrime, setShowCrime] = useState(false);
-  const [showVictim, setShowVictim] = useState(false);
-  const [showWitness, setShowWitness] = useState(false);
-  const [showSuspect, setShowSuspect] = useState(false);
 
   // Fetch officers on mount
-    useEffect(() => {
-      fetchOfficers();
-    }, []);
+  useEffect(() => {
+    fetchOfficers();
+  }, []);
 
-    const fetchOfficers = async () => {
+  const fetchOfficers = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/auth/users", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -136,12 +132,12 @@ export default function CasePage({ onSuccess, onCancel }) {
       }
 
       // Add crime info if provided
-      if (showCrime && crime.offenseType) {
+      if (crime.offenseType) {
         payload.crime = crime;
       }
 
       // Add victim info if provided
-      if (showVictim && victim.fullName) {
+      if (victim.fullName) {
         payload.victim = {
           fullName: victim.fullName,
           contact: {
@@ -154,7 +150,7 @@ export default function CasePage({ onSuccess, onCancel }) {
       }
 
       // Add witness info if provided
-      if (showWitness && witness.fullName) {
+      if (witness.fullName) {
         payload.witness = {
           fullName: witness.fullName,
           contact: {
@@ -166,7 +162,7 @@ export default function CasePage({ onSuccess, onCancel }) {
       }
 
       // Add suspect info if provided
-      if (showSuspect && suspect.fullName) {
+      if (suspect.fullName) {
         payload.suspect = {
           fullName: suspect.fullName,
           status: suspect.status,
@@ -178,9 +174,13 @@ export default function CasePage({ onSuccess, onCancel }) {
         };
       }
 
-      const response = await axios.post("http://localhost:8000/api/cases", payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const response = await axios.post(
+        "http://localhost:8000/api/cases",
+        payload,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
 
       const createdCase = response.data?.data;
       setSavedCaseDetails({
@@ -338,7 +338,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   <option value="">Leave unassigned</option>
                   {officers.map((officer) => (
                     <option key={officer._id} value={officer._id}>
-                      {(officer.username || officer.name || "Unknown")} (
+                      {officer.username || officer.name || "Unknown"} (
                       {officer.email || "No email"})
                     </option>
                   ))}
@@ -662,9 +662,9 @@ export default function CasePage({ onSuccess, onCancel }) {
                         Person of Interest
                       </option>
                       <option value="suspect">Suspect</option>
-                      <option value="accused">Accused</option>
-                      <option value="convicted">Convicted</option>
-                      <option value="acquitted">Acquitted</option>
+                      <option value="arrested">Arrested</option>
+                      <option value="charged">Charged</option>
+                      <option value="cleared">Cleared</option>
                     </select>
                   </div>
 
