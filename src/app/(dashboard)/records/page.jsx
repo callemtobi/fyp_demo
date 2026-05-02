@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { Eye, Copy, Check } from "lucide-react";
+import { Eye, Copy, Check, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SkeletonTableRow } from "@/components/SkeletonLoader";
@@ -10,8 +10,10 @@ export default function EvidenceRecords() {
   const router = useRouter();
   const [error, setError] = useState(null);
   const [evidenceData, setEvidenceData] = useState([]);
+  const [filteredEvidenceData, setFilteredEvidenceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedHash, setCopiedHash] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -44,11 +46,11 @@ export default function EvidenceRecords() {
     router.push(`/chainOfCustody?id=${evidenceId}`);
   };
 
-  const getCaseDisplayValue = (caseRef) => {
+  const getCaseTitle = (caseRef) => {
     if (!caseRef) return "-";
     if (typeof caseRef === "string") return caseRef;
-    if (typeof caseRef === "object") {
-      return caseRef.caseNumber || caseRef._id || "-";
+    if (typeof caseRef === "object" && caseRef.title) {
+      return caseRef.title;
     }
     return "-";
   };
@@ -83,6 +85,15 @@ export default function EvidenceRecords() {
     getEvidenceRecords();
   }, []);
 
+  // Search functionality
+  useEffect(() => {
+    const filtered = evidenceData.filter((evidence) => {
+      const caseTitle = getCaseTitle(evidence.caseId).toLowerCase();
+      return caseTitle.includes(searchTerm.toLowerCase());
+    });
+    setFilteredEvidenceData(filtered);
+  }, [searchTerm, evidenceData]);
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -91,6 +102,20 @@ export default function EvidenceRecords() {
         <p className="text-sm text-neutral-500">
           All evidence stored on blockchain
         </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6 max-w-3xl">
+        <div className="relative">
+          <Search className="absolute left-4 top-3.5 w-5 h-5 text-neutral-400" />
+          <input
+            type="text"
+            placeholder="Search evidence by case name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 border border-neutral-200 rounded-lg bg-white text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -106,16 +131,13 @@ export default function EvidenceRecords() {
                   IPFS Hash
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-neutral-600 font-semibold">
-                  Case ID
+                  Case Name
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-neutral-600 font-semibold">
                   Type
                 </th>
                 <th className="text-left px-4 py-3 text-xs text-neutral-600 font-semibold">
                   Date & Time
-                </th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-600 font-semibold">
-                  Status
                 </th>
                 <th className="text-center px-4 py-3 text-xs text-neutral-600 font-semibold">
                   Chain of Custody
@@ -131,8 +153,8 @@ export default function EvidenceRecords() {
                   <SkeletonTableRow />
                   <SkeletonTableRow />
                 </>
-              ) : evidenceData.length > 0 ? (
-                evidenceData.map((evidence, index) => (
+              ) : filteredEvidenceData.length > 0 ? (
+                filteredEvidenceData.map((evidence, index) => (
                   <tr
                     key={evidence.id || evidence._id || index}
                     className="border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
@@ -162,7 +184,7 @@ export default function EvidenceRecords() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-neutral-700 truncate block max-w-xs">
-                        {getCaseDisplayValue(evidence.caseId)}
+                        {getCaseTitle(evidence.caseId)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -173,17 +195,6 @@ export default function EvidenceRecords() {
                     <td className="px-4 py-3">
                       <span className="text-xs text-neutral-600 whitespace-nowrap">
                         {formatDate(evidence.createdAt)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2 py-1 rounded text-xs whitespace-nowrap ${
-                          evidence.status === "Verified"
-                            ? "bg-green-50 text-green-700"
-                            : "bg-yellow-50 text-yellow-700"
-                        }`}
-                      >
-                        {evidence.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -203,7 +214,9 @@ export default function EvidenceRecords() {
               ) : (
                 <tr>
                   <td colSpan="7" className="text-center py-8 text-neutral-500">
-                    No evidence records found
+                    {searchTerm
+                      ? "No evidence found matching your search"
+                      : "No evidence records found"}
                   </td>
                 </tr>
               )}

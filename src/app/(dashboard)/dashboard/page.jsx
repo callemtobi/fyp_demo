@@ -3,6 +3,7 @@
 import { FolderOpen, Briefcase, CheckCircle2, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import axios from "axios";
 import {
   AreaChart,
@@ -173,9 +174,17 @@ export default function Dashboard() {
     getRecentActivityData();
   }, [pathname]);
 
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
+
   return (
     <div className="p-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl text-neutral-800 mb-2">Dashboard</h1>
         <p className="text-sm text-neutral-500">
@@ -290,10 +299,12 @@ export default function Dashboard() {
               >
                 <div>
                   <p className="text-sm text-neutral-700 font-medium">
-                    {activity.user}
+                    {activity.type === "case"
+                      ? `${activity.user} - ${activity.action}`
+                      : `${activity.caseName || activity.user} - ${activity.action}`}
                   </p>
                   <p className="text-xs text-neutral-500 mt-1">
-                    {activity.action}
+                    {activity.type === "evidence" ? `by ${activity.user}` : ""}
                   </p>
                 </div>
                 <span className="text-xs text-neutral-500">

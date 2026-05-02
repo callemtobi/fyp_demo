@@ -72,9 +72,7 @@ export default function Reports() {
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-neutral-800 mb-2">
-          Case Reports
-        </h1>
+        <h1 className="text-2xl text-neutral-800 mb-2">Case Reports</h1>
         <p className="text-sm text-neutral-600">
           View all cases and their associated evidence records
         </p>

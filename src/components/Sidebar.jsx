@@ -106,7 +106,7 @@ export default function Sidebar() {
           onClick={() => {
             logout(router);
           }}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-neutral-600 hover:bg-neutral-100 transition-colors w-full mt-2"
+          className="flex items-center gap-3 px-4 py-3 border rounded-lg bg-red-600 text-white-600 hover:bg-neutral-100 transition-colors w-full mt-2"
         >
           <LogOut className="w-5 h-5" strokeWidth={1.5} />
           <span className="text-sm">Logout</span>

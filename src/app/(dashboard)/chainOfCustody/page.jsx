@@ -321,14 +321,26 @@ export default function ChainOfCustodyPage() {
 
               {/* Case ID */}
               {chainOfCustody.caseId && (
-                <div>
-                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                    Case ID
-                  </p>
-                  <p className="text-neutral-800">
-                    {chainOfCustody.caseId.caseTitle}
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                      Case ID
+                    </p>
+                    <p className="text-neutral-800">
+                      {chainOfCustody.caseId.caseNumber || "-"}
+                    </p>
+                  </div>
+
+                  {/* Case Name */}
+                  <div>
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+                      Case Name
+                    </p>
+                    <p className="text-neutral-800">
+                      {chainOfCustody.caseId.title || "-"}
+                    </p>
+                  </div>
+                </>
               )}
 
               {/* Blockchain Transaction */}
@@ -396,96 +408,17 @@ export default function ChainOfCustodyPage() {
             </div>
           </div>
 
-          {/* First Upload Transaction Details */}
-          {chainOfCustody.chainOfCustody &&
-            chainOfCustody.chainOfCustody.length > 0 &&
-            chainOfCustody.chainOfCustody[0]?.action === "uploaded" && (
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-200 p-6 mb-8">
-                <h2 className="text-lg font-semibold text-neutral-800 mb-6">
-                  First Upload Transaction
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Uploaded By */}
-                  <div>
-                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                      Uploaded By
-                    </p>
-                    <div>
-                      <p className="text-neutral-800 font-medium">
-                        {chainOfCustody.chainOfCustody[0].user?.name}
-                      </p>
-                      <p className="text-neutral-600 text-sm">
-                        {chainOfCustody.chainOfCustody[0].user?.email}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Upload Timestamp */}
-                  <div>
-                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                      Upload Time
-                    </p>
-                    <p className="text-neutral-800">
-                      {formatDate(chainOfCustody.chainOfCustody[0].timestamp)}
-                    </p>
-                  </div>
-
-                  {/* IP Address */}
-                  {chainOfCustody.chainOfCustody[0].ipAddress && (
-                    <div>
-                      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                        Upload IP Address
-                      </p>
-                      <p className="text-neutral-800 font-mono">
-                        {chainOfCustody.chainOfCustody[0].ipAddress}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* User Agent */}
-                  {chainOfCustody.chainOfCustody[0].userAgent && (
-                    <div>
-                      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                        User Agent
-                      </p>
-                      <p className="text-neutral-800 text-sm truncate">
-                        {chainOfCustody.chainOfCustody[0].userAgent}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Transaction Hash if available */}
-                  {chainOfCustody.chainOfCustody[0].txHash && (
-                    <div className="md:col-span-2">
-                      <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                        Transaction Hash
-                      </p>
-                      <div className="flex items-center gap-2 group cursor-pointer">
-                        <code className="text-neutral-800 font-mono text-sm break-all">
-                          {truncateHash(
-                            chainOfCustody.chainOfCustody[0].txHash,
-                          )}
-                        </code>
-                        {copiedHash === "uploadTxHash" ? (
-                          <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                        ) : (
-                          <Copy
-                            className="w-4 h-4 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0"
-                            onClick={() =>
-                              copyToClipboard(
-                                chainOfCustody.chainOfCustody[0].txHash,
-                                "uploadTxHash",
-                              )
-                            }
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+          {/* Evidence Summary Card */}
+          {chainOfCustody.imageCaption && (
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200 p-6 mb-8">
+              <h2 className="text-lg font-semibold text-amber-900 mb-4">
+                Evidence Summary
+              </h2>
+              <p className="text-neutral-700 leading-relaxed whitespace-pre-wrap break-words">
+                {chainOfCustody.imageCaption}
+              </p>
+            </div>
+          )}
 
           {/* Statistics Card */}
           <div className="bg-white rounded-xl border border-neutral-200 p-6">

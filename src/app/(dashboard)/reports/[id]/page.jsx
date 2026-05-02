@@ -14,6 +14,7 @@ import {
   User,
   Tag,
   Briefcase,
+  Eye,
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -26,6 +27,7 @@ export default function CaseDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [generating, setGenerating] = useState(false);
+  const [downloadingSummary, setDownloadingSummary] = useState(false);
 
   useEffect(() => {
     const fetchCaseData = async () => {
@@ -283,6 +285,61 @@ export default function CaseDetail() {
     }
   };
 
+  const downloadSummary = async () => {
+    if (!caseData) return;
+
+    try {
+      setDownloadingSummary(true);
+
+      // Use the stored summary from caseAnalysisSummary or generate a basic summary
+      let summary = "";
+
+      const caseSummary = caseData.caseAnalysisSummary?.caseSummary || "";
+      const evidenceSummary =
+        caseData.caseAnalysisSummary?.evidenceSummary || "";
+
+      if (caseSummary) {
+        summary += caseSummary + "\n";
+      }
+
+      if (evidenceSummary) {
+        summary += "\n" + evidenceSummary;
+      }
+
+      if (!summary) {
+        // Generate basic summary if not available
+        summary = `CASE SUMMARY
+        
+Case Number: ${caseData.caseNumber}
+Title: ${caseData.title}
+Type: ${caseData.caseType}
+Status: ${caseData.status}
+Jurisdiction: ${caseData.jurisdiction}
+Date Opened: ${formatDate(caseData.dateOpened)}
+
+Description:
+${caseData.description}
+
+Evidence Count: ${caseData.evidence?.length || 0}`;
+      }
+
+      // Create a text file and download it
+      const element = document.createElement("a");
+      const file = new Blob([summary], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+      element.download = `Case-${caseData.caseNumber}-Summary-${Date.now()}.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+
+      setDownloadingSummary(false);
+    } catch (err) {
+      console.error("Error downloading summary:", err);
+      setError("Failed to download summary");
+      setDownloadingSummary(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-8">
@@ -359,6 +416,23 @@ export default function CaseDetail() {
               <>
                 <Download className="w-4 h-4" />
                 Download PDF Report
+              </>
+            )}
+          </button>
+          <button
+            onClick={downloadSummary}
+            disabled={downloadingSummary}
+            className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:bg-green-400"
+          >
+            {downloadingSummary ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                Downloading...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download Summary
               </>
             )}
           </button>
@@ -609,9 +683,18 @@ export default function CaseDetail() {
               </div>
               <div className="border-t pt-4">
                 <p className="text-xs text-neutral-600 mb-2">Evidence Count</p>
-                <p className="text-2xl font-semibold text-neutral-800">
+                <p className="text-2xl font-semibold text-neutral-800 mb-4">
                   {caseData.evidence?.length || 0}
                 </p>
+                {caseData.evidence && caseData.evidence.length > 0 && (
+                  <button
+                    onClick={() => router.push(`/records`)}
+                    className="w-full px-3 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Details
+                  </button>
+                )}
               </div>
             </div>
           </div>

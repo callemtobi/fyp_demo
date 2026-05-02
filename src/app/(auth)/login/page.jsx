@@ -69,10 +69,10 @@ export default function Login() {
       );
       console.log("Login successful:", response.data);
       localStorage.setItem("token", response.data.token);
-      
+
       // Initialize axios interceptors
       initializeAxiosInterceptors(router);
-      
+
       router.push("/dashboard");
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");
@@ -174,7 +174,7 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="bg-white rounded-2xl shadow-lg text-center border border-neutral-200 p-2 my-2">
+          {/* <div className="bg-white rounded-2xl shadow-lg text-center border border-neutral-200 p-2 my-2">
             <ConnectButton
               client={client}
               appMetadata={{
@@ -182,11 +182,17 @@ export default function Login() {
                 url: "https://example.com",
               }}
             />
-          </div>
+          </div> */}
 
           {/* Footer Note */}
           <p className="text-xs text-neutral-500 text-center mt-6">
             Secure access to forensic evidence management system
+          </p>
+          <p className="text-xs text-neutral-500 text-center mt-2">
+            Don't have an account?{" "}
+            <Link href="/register" className="text-blue-500 hover:underline">
+              Register here
+            </Link>
           </p>
         </div>
 
@@ -251,6 +257,7 @@ export default function Login() {
         </div>
       </div>
       {/* <div className="flex">
+      <p></p>
         <div className="absolute top-48 right-10 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">
           <div className="flex items-center space-x-2 mt-2">
             <label className="text-sm text-neutral-600">Email:</label>
