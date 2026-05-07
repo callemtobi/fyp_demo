@@ -95,31 +95,33 @@ export default function EvidenceRecords() {
   }, [searchTerm, evidenceData]);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl text-neutral-800 mb-2">Evidence Records</h1>
-        <p className="text-sm text-neutral-500">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-xl md:text-2xl text-neutral-800 mb-2">
+          Evidence Records
+        </h1>
+        <p className="text-xs md:text-sm text-neutral-500">
           All evidence stored on blockchain
         </p>
       </div>
 
       {/* Search Bar */}
-      <div className="mb-6 max-w-3xl">
+      <div className="mb-6 w-full max-w-3xl">
         <div className="relative">
-          <Search className="absolute left-4 top-3.5 w-5 h-5 text-neutral-400" />
+          <Search className="absolute left-4 top-2.5 md:top-3.5 w-4 md:w-5 h-4 md:h-5 text-neutral-400" />
           <input
             type="text"
             placeholder="Search evidence by case name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-neutral-200 rounded-lg bg-white text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 text-sm border border-neutral-200 rounded-lg bg-white text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      {/* Table - Desktop */}
+      <div className="hidden md:block bg-white rounded-lg md:rounded-xl border border-neutral-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -140,7 +142,7 @@ export default function EvidenceRecords() {
                   Date & Time
                 </th>
                 <th className="text-center px-4 py-3 text-xs text-neutral-600 font-semibold">
-                  Chain of Custody
+                  Action
                 </th>
               </tr>
             </thead>
@@ -213,7 +215,10 @@ export default function EvidenceRecords() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-8 text-neutral-500">
+                  <td
+                    colSpan="6"
+                    className="text-center py-8 text-xs md:text-sm text-neutral-500"
+                  >
                     {searchTerm
                       ? "No evidence found matching your search"
                       : "No evidence records found"}
@@ -223,6 +228,89 @@ export default function EvidenceRecords() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Card View - Mobile */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <>
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 animate-pulse">
+              <div className="h-4 bg-neutral-200 rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
+            </div>
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 animate-pulse">
+              <div className="h-4 bg-neutral-200 rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
+            </div>
+          </>
+        ) : filteredEvidenceData.length > 0 ? (
+          filteredEvidenceData.map((evidence, index) => (
+            <div
+              key={evidence.id || evidence._id || index}
+              className="bg-white rounded-lg border border-neutral-200 p-4"
+            >
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-neutral-500 mb-1">Case Name</p>
+                  <p className="text-sm font-medium text-neutral-800 truncate">
+                    {getCaseTitle(evidence.caseId)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigateToCoC(evidence._id)}
+                  className="p-2 hover:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
+                  title="View Chain of Custody"
+                >
+                  <Eye className="w-4 h-4 text-blue-600" strokeWidth={1.5} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                <div>
+                  <p className="text-neutral-500 mb-1">Evidence ID</p>
+                  <p className="text-neutral-700 font-mono break-all">
+                    {truncateHash(evidence.evidenceId, 6)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-neutral-500 mb-1">Type</p>
+                  <p className="text-neutral-700">{evidence.fileType}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-neutral-500 mb-1">IPFS Hash</p>
+                <div
+                  className="flex items-center gap-2 group cursor-pointer"
+                  onClick={() =>
+                    copyToClipboard(evidence.ipfsHash, evidence._id)
+                  }
+                >
+                  <code className="text-xs text-neutral-700 font-mono truncate">
+                    {truncateHash(evidence.ipfsHash, 6)}
+                  </code>
+                  {copiedHash === evidence._id ? (
+                    <Check className="w-3 h-3 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 flex-shrink-0" />
+                  )}
+                </div>
+              </div>
+
+              <p className="text-xs text-neutral-500 mt-3">
+                {formatDate(evidence.createdAt)}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-neutral-500">
+              {searchTerm
+                ? "No evidence found matching your search"
+                : "No evidence records found"}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

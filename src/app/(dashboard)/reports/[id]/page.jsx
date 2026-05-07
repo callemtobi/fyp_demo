@@ -342,7 +342,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
   if (loading) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-6 lg:p-8">
         <button
           onClick={() => router.back()}
           className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700"
@@ -359,7 +359,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
   if (error || !caseData) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-6 lg:p-8">
         <button
           onClick={() => router.back()}
           className="mb-6 flex items-center gap-2 text-blue-600 hover:text-blue-700"
@@ -376,7 +376,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-6 lg:p-8">
       {/* Back Button */}
       <button
         onClick={() => router.back()}
@@ -388,9 +388,9 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
       {/* Header Section */}
       <div className="mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold text-neutral-800 mb-2">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-semibold text-neutral-800 mb-2">
               {caseData.title}
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
@@ -405,7 +405,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
           <button
             onClick={generatePDFReport}
             disabled={generating}
-            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:bg-blue-400"
+            className="w-full md:w-auto px-4 md:px-6 py-2 md:py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
           >
             {generating ? (
               <>
@@ -422,7 +422,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
           <button
             onClick={downloadSummary}
             disabled={downloadingSummary}
-            className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:bg-green-400"
+            className="w-full md:w-auto px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:bg-green-400"
           >
             {downloadingSummary ? (
               <>
@@ -440,17 +440,17 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Case Information - Left Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Case Details Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
-            <h2 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-lg border border-neutral-200 p-4 md:p-6">
+            <h2 className="text-base md:text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
               <Briefcase className="w-5 h-5" />
               Case Details
             </h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-neutral-600 mb-1">Case Number</p>
                   <p className="text-sm font-semibold text-neutral-800">
@@ -479,8 +479,8 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
           {/* Crime Information */}
           {caseData.crime && Object.keys(caseData.crime).length > 0 && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-6">
-              <h2 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 md:p-6">
+              <h2 className="text-base md:text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
                 Crime Information
               </h2>
@@ -530,8 +530,8 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
           {/* Victim Information */}
           {caseData.victim && Object.keys(caseData.victim).length > 0 && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-6">
-              <h2 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 md:p-6">
+              <h2 className="text-base md:text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <User className="w-5 h-5" />
                 Victim Information
               </h2>
@@ -574,8 +574,8 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
           {/* Suspect Information */}
           {caseData.suspect && Object.keys(caseData.suspect).length > 0 && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-6">
-              <h2 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 md:p-6">
+              <h2 className="text-base md:text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
                 Suspect Information
               </h2>
@@ -618,8 +618,8 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
           {/* Witness Information */}
           {caseData.witness && Object.keys(caseData.witness).length > 0 && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-6">
-              <h2 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 md:p-6">
+              <h2 className="text-base md:text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <User className="w-5 h-5" />
                 Witness Information
               </h2>
@@ -664,7 +664,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
         {/* Right Sidebar */}
         <div className="space-y-6">
           {/* Quick Info Card */}
-          <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg border border-blue-200 p-6">
+          <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg border border-blue-200 p-4 md:p-6">
             <h3 className="text-sm font-semibold text-neutral-800 mb-4">
               Quick Information
             </h3>
@@ -701,7 +701,7 @@ Evidence Count: ${caseData.evidence?.length || 0}`;
 
           {/* Tags */}
           {caseData.tags && caseData.tags.length > 0 && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-6">
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 md:p-6">
               <h3 className="text-sm font-semibold text-neutral-800 mb-4 flex items-center gap-2">
                 <Tag className="w-4 h-4" />
                 Tags

@@ -248,11 +248,13 @@ export default function CasePage({ onSuccess, onCancel }) {
   // ---s
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl text-neutral-800 mb-2">Create Case</h1>
-        <p className="text-sm text-neutral-500">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-xl md:text-2xl text-neutral-800 mb-2">
+          Create Case
+        </h1>
+        <p className="text-xs md:text-sm text-neutral-500">
           Create a case by filling the form below.
         </p>
       </div>
@@ -260,9 +262,9 @@ export default function CasePage({ onSuccess, onCancel }) {
       <div className="max-w-3xl mx-auto">
         {/* Success Message */}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-green-500" />
-            <p className="text-green-700 font-medium">
+          <div className="mb-6 p-3 md:p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs md:text-sm text-green-700 font-medium break-words">
               Case saved successfully: {savedCaseDetails?.title}
               {savedCaseDetails?.caseNumber
                 ? ` (${savedCaseDetails.caseNumber})`
@@ -272,9 +274,9 @@ export default function CasePage({ onSuccess, onCancel }) {
         )}
 
         {loading && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
-            <Loader className="w-5 h-5 text-blue-600 animate-spin" />
-            <p className="text-blue-800 font-medium">
+          <div className="mb-6 p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+            <Loader className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0 mt-0.5" />
+            <p className="text-xs md:text-sm text-blue-800 font-medium">
               Saving case{formData.title ? ` "${formData.title}"` : ""}...
             </p>
           </div>
@@ -282,19 +284,21 @@ export default function CasePage({ onSuccess, onCancel }) {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500" />
-            <p className="text-red-700 font-medium">{error}</p>
+          <div className="mb-6 p-3 md:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs md:text-sm text-red-700 font-medium break-words">
+              {error}
+            </p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
           {/* Case Information Section */}
           <div>
-            <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6 shadow-sm">
+            <div className="bg-white rounded-lg md:rounded-xl border border-neutral-200 p-4 md:p-6 mb-6 shadow-sm">
               {/* Case Title */}
               <div className="mb-4">
-                <label className="text-sm font-medium block text-neutral-700 mb-1">
+                <label className="text-xs md:text-sm font-medium block text-neutral-700 mb-2">
                   Case Title <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -310,7 +314,7 @@ export default function CasePage({ onSuccess, onCancel }) {
 
               {/* Jurisdiction */}
               <div className="mb-4">
-                <label className="text-sm font-medium block text-neutral-700 mb-1">
+                <label className="text-xs md:text-sm font-medium block text-neutral-700 mb-2">
                   Jurisdiction <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -326,7 +330,7 @@ export default function CasePage({ onSuccess, onCancel }) {
 
               {/* Assigned Officer */}
               <div className="mb-4">
-                <label className="text-sm font-medium block text-neutral-700 mb-1">
+                <label className="text-xs md:text-sm font-medium block text-neutral-700 mb-2">
                   Assigned Officer (Optional)
                 </label>
                 <select
@@ -345,49 +349,50 @@ export default function CasePage({ onSuccess, onCancel }) {
                 </select>
               </div>
 
-              {/* Case Type */}
-              <div className="mb-4">
-                <label className="text-sm font-medium block text-neutral-700 mb-1">
-                  Case Type
-                </label>
-                <select
-                  name="caseType"
-                  value={formData.caseType}
-                  onChange={handleCaseChange}
-                  className={baseSelect}
-                  disabled={loading}
-                >
-                  <option value="other">Other</option>
-                  <option value="criminal">Criminal</option>
-                  <option value="civil">Civil</option>
-                  <option value="corporate">Corporate</option>
-                  <option value="cyber">Cyber</option>
-                </select>
-              </div>
+              {/* Case Type & Status Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-xs md:text-sm font-medium block text-neutral-700 mb-2">
+                    Case Type
+                  </label>
+                  <select
+                    name="caseType"
+                    value={formData.caseType}
+                    onChange={handleCaseChange}
+                    className={baseSelect}
+                    disabled={loading}
+                  >
+                    <option value="other">Other</option>
+                    <option value="criminal">Criminal</option>
+                    <option value="civil">Civil</option>
+                    <option value="corporate">Corporate</option>
+                    <option value="cyber">Cyber</option>
+                  </select>
+                </div>
 
-              {/* Case Status */}
-              <div className="mb-4">
-                <label className="text-sm font-medium block text-neutral-700 mb-1">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleCaseChange}
-                  className={baseSelect}
-                  disabled={loading}
-                >
-                  <option value="open">Open</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="closed">Closed</option>
-                  <option value="archived">Archived</option>
-                  <option value="suspended">Suspended</option>
-                </select>
+                <div>
+                  <label className="text-xs md:text-sm font-medium block text-neutral-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleCaseChange}
+                    className={baseSelect}
+                    disabled={loading}
+                  >
+                    <option value="open">Open</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="closed">Closed</option>
+                    <option value="archived">Archived</option>
+                    <option value="suspended">Suspended</option>
+                  </select>
+                </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block font-medium text-sm text-neutral-700 mb-1">
+                <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                   Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -403,19 +408,19 @@ export default function CasePage({ onSuccess, onCancel }) {
             </div>
           </div>
 
-          {/* Additional Sections. No dropdown, always expanded */}
-          <div className="space-y-6">
+          {/* Additional Sections */}
+          <div className="space-y-4 md:space-y-6">
             {/* Crime Information */}
             <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
-              <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
-                <span className="font-medium text-neutral-900">
+              <div className="px-4 md:px-6 py-3 md:py-4 bg-neutral-50 border-b border-neutral-200">
+                <span className="font-medium text-sm md:text-base text-neutral-900">
                   Crime Information (Optional)
                 </span>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Offense Type
                     </label>
                     <input
@@ -429,7 +434,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Classification
                     </label>
                     <select
@@ -446,7 +451,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Location
                     </label>
                     <input
@@ -460,7 +465,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Date Occurred
                     </label>
                     <input
@@ -477,15 +482,15 @@ export default function CasePage({ onSuccess, onCancel }) {
 
             {/* Victim Information */}
             <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
-              <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
-                <span className="font-medium text-neutral-900">
+              <div className="px-4 md:px-6 py-3 md:py-4 bg-neutral-50 border-b border-neutral-200">
+                <span className="font-medium text-sm md:text-base text-neutral-900">
                   Victim Information (Optional)
                 </span>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Full Name
                     </label>
                     <input
@@ -499,7 +504,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Phone
                     </label>
                     <input
@@ -513,7 +518,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Email
                     </label>
                     <input
@@ -526,8 +531,8 @@ export default function CasePage({ onSuccess, onCancel }) {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Statement
                     </label>
                     <textarea
@@ -540,8 +545,8 @@ export default function CasePage({ onSuccess, onCancel }) {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Injury Description
                     </label>
                     <textarea
@@ -559,15 +564,15 @@ export default function CasePage({ onSuccess, onCancel }) {
 
             {/* Witness Information */}
             <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
-              <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
-                <span className="font-medium text-neutral-900">
+              <div className="px-4 md:px-6 py-3 md:py-4 bg-neutral-50 border-b border-neutral-200">
+                <span className="font-medium text-sm md:text-base text-neutral-900">
                   Witness Information (Optional)
                 </span>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Full Name
                     </label>
                     <input
@@ -581,7 +586,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Phone
                     </label>
                     <input
@@ -595,7 +600,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Email
                     </label>
                     <input
@@ -608,8 +613,8 @@ export default function CasePage({ onSuccess, onCancel }) {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Testimony
                     </label>
                     <textarea
@@ -627,15 +632,15 @@ export default function CasePage({ onSuccess, onCancel }) {
 
             {/* Suspect Information */}
             <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
-              <div className="px-6 py-4 bg-neutral-50 border-b border-neutral-200">
-                <span className="font-medium text-neutral-900">
+              <div className="px-4 md:px-6 py-3 md:py-4 bg-neutral-50 border-b border-neutral-200">
+                <span className="font-medium text-sm md:text-base text-neutral-900">
                   Suspect Information (Optional)
                 </span>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Full Name
                     </label>
                     <input
@@ -649,7 +654,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Status
                     </label>
                     <select
@@ -669,7 +674,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Phone
                     </label>
                     <input
@@ -683,7 +688,7 @@ export default function CasePage({ onSuccess, onCancel }) {
                   </div>
 
                   <div>
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Email
                     </label>
                     <input
@@ -696,8 +701,8 @@ export default function CasePage({ onSuccess, onCancel }) {
                     />
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block font-medium text-sm text-neutral-700 mb-1">
+                  <div className="sm:col-span-2">
+                    <label className="block font-medium text-xs md:text-sm text-neutral-700 mb-2">
                       Alibi
                     </label>
                     <textarea
@@ -715,29 +720,22 @@ export default function CasePage({ onSuccess, onCancel }) {
           </div>
 
           {/* Form Actions */}
-          <div className="flex gap-4 pt-6 border-t border-neutral-200">
+          <div className="flex gap-2 sm:gap-4 pt-4 md:pt-6 border-t border-neutral-200">
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 rounded-lg shadow transition flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-2 md:py-3 rounded-lg shadow transition flex items-center justify-center gap-2 text-sm md:text-base"
             >
               {loading ? (
                 <>
-                  <Loader className="w-5 h-5 animate-spin" />
-                  Creating Case...
+                  <Loader className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
+                  <span className="hidden sm:inline">Creating Case...</span>
+                  <span className="sm:hidden">Creating...</span>
                 </>
               ) : (
                 "Create Case"
               )}
             </button>
-            {/* <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-medium py-3 rounded-lg shadow transition flex items-center justify-center gap-2"
-            >
-              <X className="w-5 h-5" />
-              Cancel
-            </button> */}
           </div>
         </form>
       </div>

@@ -184,16 +184,16 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl text-neutral-800 mb-2">Dashboard</h1>
-        <p className="text-sm text-neutral-500">
+    <div className="p-4 md:p-6 lg:p-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-xl md:text-2xl text-neutral-800 mb-2">Dashboard</h1>
+        <p className="text-xs md:text-sm text-neutral-500">
           Overview of forensic evidence management system
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {loading ? (
           <>
             <SkeletonStatCard />
@@ -206,7 +206,7 @@ export default function Dashboard() {
             return (
               <div
                 key={stat.label}
-                className="bg-white rounded-xl border border-neutral-200 p-6"
+                className="bg-white rounded-lg md:rounded-xl border border-neutral-200 p-4 md:p-6"
               >
                 <div className="flex items-center justify-center mb-4">
                   <div
@@ -218,7 +218,7 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
-                <p className="text-2xl text-neutral-800 mb-1 text-center">
+                <p className="text-xl md:text-2xl text-neutral-800 mb-1 text-center">
                   {stat.value}
                 </p>
                 <p className="text-xs text-neutral-500 text-center">
@@ -231,15 +231,18 @@ export default function Dashboard() {
       </div>
 
       {/* Chart */}
-      <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6">
-        <div className="flex items-center gap-2 mb-6">
-          <TrendingUp className="w-5 h-5 text-neutral-600" strokeWidth={1.5} />
+      <div className="bg-white rounded-lg md:rounded-xl border border-neutral-200 p-4 md:p-6 mb-4 md:mb-6 overflow-x-auto">
+        <div className="flex items-center gap-2 mb-4 md:mb-6">
+          <TrendingUp
+            className="w-5 h-5 text-neutral-600 flex-shrink-0"
+            strokeWidth={1.5}
+          />
           <h2 className="text-sm text-neutral-700">Evidence Upload Trend</h2>
         </div>
         {loading ? (
           <SkeletonChart />
         ) : evidenceTrendData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={200} minWidth={250}>
             <AreaChart data={evidenceTrendData}>
               <defs>
                 <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -275,14 +278,14 @@ export default function Dashboard() {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-64 text-neutral-500">
+          <div className="flex items-center justify-center h-48 md:h-64 text-neutral-500">
             <p>Loading chart data...</p>
           </div>
         )}
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-xl border border-neutral-200 p-6">
+      <div className="bg-white rounded-lg md:rounded-xl border border-neutral-200 p-4 md:p-6">
         <h2 className="text-sm text-neutral-700 mb-4">Recent Activity</h2>
         <div className="space-y-4">
           {loading ? (
@@ -295,10 +298,10 @@ export default function Dashboard() {
             recentActivity.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-center justify-between py-3 border-b border-neutral-100 last:border-0"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-neutral-100 last:border-0 gap-2"
               >
-                <div>
-                  <p className="text-sm text-neutral-700 font-medium">
+                <div className="min-w-0">
+                  <p className="text-sm text-neutral-700 font-medium break-words">
                     {activity.type === "case"
                       ? `${activity.user} - ${activity.action}`
                       : `${activity.caseName || activity.user} - ${activity.action}`}
@@ -307,7 +310,7 @@ export default function Dashboard() {
                     {activity.type === "evidence" ? `by ${activity.user}` : ""}
                   </p>
                 </div>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-neutral-500 flex-shrink-0">
                   {activity.time}
                 </span>
               </div>
