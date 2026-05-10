@@ -9,12 +9,7 @@ import axios from "axios";
 import { client } from "./client";
 import { initializeAxiosInterceptors } from "@/lib/axiosConfig";
 
-const roles = [
-  "Student Investigator",
-  "Student Analyst",
-  "Project Admin",
-  "Supervisor",
-];
+const roles = ["Investigator", "Forensic Analyst", "Police Officer", "Judge"];
 
 export default function Login() {
   const router = useRouter();
@@ -22,6 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -80,6 +76,19 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 770);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     setFormData((prev) => ({ ...prev, role: selectedRole }));
@@ -203,59 +212,116 @@ export default function Login() {
       </div>
 
       {/* Test Credentials Tooltip */}
-      <div className="flex">
-        <div className="absolute top-48 right-10 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">
-          <div className="flex items-center mt-2">
-            <label className="text-sm text-neutral-600 mr-2">Email:</label>
-            <input
-              type="text"
-              value="tobi659@example.com"
-              readOnly
-              className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
-            />
-            <button
-              onClick={() => handleCopy("tobi659@example.com", "email")}
-              className="ml-2"
-            >
-              {copiedField === "email" ? (
-                <Check className="w-4 h-4 text-green-500" />
-              ) : (
-                <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
-              )}
-            </button>
-          </div>
+      {!isMobile && (
+        <div className="flex">
+          <div className="absolute top-48 right-10 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">
+            <div className="flex items-center mt-2">
+              <label className="text-sm text-neutral-600 mr-2">Email:</label>
+              <input
+                type="text"
+                value="max659@example.com"
+                readOnly
+                className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+              />
+              <button
+                onClick={() => handleCopy("max659@example.com", "email")}
+                className="ml-2"
+              >
+                {copiedField === "email" ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+                )}
+              </button>
+            </div>
 
-          <div className="flex items-center mt-2">
-            <label className="text-sm text-neutral-600 mr-2">Password:</label>
-            <input
-              type="text"
-              value="Pass123"
-              readOnly
-              className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
-            />
-            <button
-              onClick={() => handleCopy("Pass123", "password")}
-              className="ml-2"
-            >
-              {copiedField === "password" ? (
-                <Check className="w-4 h-4 text-green-500" />
-              ) : (
-                <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
-              )}
-            </button>
-          </div>
+            <div className="flex items-center mt-2">
+              <label className="text-sm text-neutral-600 mr-2">Password:</label>
+              <input
+                type="text"
+                value="Pass123"
+                readOnly
+                className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+              />
+              <button
+                onClick={() => handleCopy("Pass123", "password")}
+                className="ml-2"
+              >
+                {copiedField === "password" ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+                )}
+              </button>
+            </div>
 
-          <div className="flex items-center mt-2">
-            <label className="text-sm text-neutral-600 mr-2">Role:</label>
-            <input
-              type="text"
-              value="Student Investigator"
-              readOnly
-              className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
-            />
+            <div className="flex items-center mt-2">
+              <label className="text-sm text-neutral-600 mr-2">Role:</label>
+              <input
+                type="text"
+                value="Police Officer"
+                readOnly
+                className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
+      {!isMobile && (
+        <div className="flex">
+          <div className="absolute top-80 right-10 mt-5 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">
+            <div className="flex items-center mt-2">
+              <label className="text-sm text-neutral-600 mr-2">Email:</label>
+              <input
+                type="text"
+                value="judge@gmail.com"
+                readOnly
+                className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+              />
+              <button
+                onClick={() => handleCopy("judge@gmail.com", "email")}
+                className="ml-2"
+              >
+                {copiedField === "email" ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center mt-2">
+              <label className="text-sm text-neutral-600 mr-2">Password:</label>
+              <input
+                type="text"
+                value="judge123"
+                readOnly
+                className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+              />
+              <button
+                onClick={() => handleCopy("judge123", "password")}
+                className="ml-2"
+              >
+                {copiedField === "password" ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center mt-2">
+              <label className="text-sm text-neutral-600 mr-2">Role:</label>
+              <input
+                type="text"
+                value="Judge"
+                readOnly
+                className="flex-1 bg-transparent text-neutral-600 border-none focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
       {/* <div className="flex">
       <p></p>
         <div className="absolute top-48 right-10 bg-white border border-neutral-200 rounded-lg p-4 shadow-md cursor-pointer">

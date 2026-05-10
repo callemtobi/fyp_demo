@@ -105,6 +105,14 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Handle 403 Forbidden errors (permission denied)
+    if (error.response?.status === 403) {
+      const message =
+        error.response?.data?.message ||
+        "You do not have permission to perform this action";
+      alert(message);
+    }
+
     return Promise.reject(error);
   },
 );

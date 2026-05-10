@@ -19,15 +19,45 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { logout } from "@/lib/jwtUtils";
 
-const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/caseCreation", label: "Create Case", icon: Briefcase },
-  { path: "/upload", label: "Upload Evidence", icon: Upload },
-  { path: "/reports", label: "Case Reports", icon: FileText },
-  { path: "/records", label: "Evidence Records", icon: FolderOpen },
-  { path: "/comparison", label: "Case Comparison", icon: GitCompare },
-  { path: "/accessControl", label: "Access Control", icon: Shield },
-  { path: "/settings", label: "Settings", icon: SettingsIcon },
+const allNavItems = [
+  {
+    path: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    roles: ["Investigator", "Police Officer", "Judge", "Forensic Analyst"],
+  },
+  {
+    path: "/caseCreation",
+    label: "Create Case",
+    icon: Briefcase,
+    roles: ["Investigator", "Police Officer"],
+  },
+  {
+    path: "/upload",
+    label: "Upload Evidence",
+    icon: Upload,
+    roles: ["Investigator", "Police Officer", "Forensic Analyst"],
+  },
+  {
+    path: "/reports",
+    label: "Case Reports",
+    icon: FileText,
+    roles: ["Investigator", "Forensic Analyst"],
+  },
+  {
+    path: "/records",
+    label: "Evidence Records",
+    icon: FolderOpen,
+    roles: ["Investigator", "Police Officer", "Judge", "Forensic Analyst"],
+  },
+  {
+    path: "/comparison",
+    label: "Case Comparison",
+    icon: GitCompare,
+    roles: ["Investigator", "Police Officer", "Judge", "Forensic Analyst"],
+  },
+  // { path: "/accessControl", label: "Access Control", icon: Shield },
+  // { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export default function Sidebar() {
@@ -35,6 +65,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [userData, setUserData] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [navItems, setNavItems] = useState([]);
 
   useEffect(() => {
     async function getUserData() {
@@ -56,6 +87,12 @@ export default function Sidebar() {
         );
 
         setUserData(response.data.data);
+        // Filter navigation items based on user role
+        const userRole = response.data.data.role;
+        const filteredNavItems = allNavItems.filter((item) =>
+          item.roles.includes(userRole),
+        );
+        setNavItems(filteredNavItems);
         // console.log("User data fetched:", response.data.data);
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -144,7 +181,7 @@ export default function Sidebar() {
             onClick={() => {
               logout(router);
             }}
-            className="flex items-center gap-3 px-4 py-3 border rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors w-full mt-2 text-sm"
+            className="flex items-center gap-3 px-4 py-3 border rounded-lg bg-gray-50 text-red-500 hover:text-red-700 hover:bg-gray-100 transition-colors w-full mt-2 text-sm"
           >
             <LogOut className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
             <span>Logout</span>

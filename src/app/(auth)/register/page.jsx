@@ -6,12 +6,7 @@ import Link from "next/link";
 import { Shield } from "lucide-react";
 import axios from "axios";
 
-const roles = [
-  "Student Investigator",
-  "Student Analyst",
-  "Project Admin",
-  "Supervisor",
-];
+const roles = ["Investigator", "Forensic Analyst", "Police Officer", "Judge"];
 
 export default function Register() {
   const router = useRouter();
@@ -23,7 +18,7 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
-    walletAddress: "",
+    // walletAddress: "",
   });
 
   const handleChange = (e) => {
@@ -63,7 +58,7 @@ export default function Register() {
           email: formData.email,
           password: formData.password,
           role: selectedRole,
-          walletAddress: formData.walletAddress,
+          // walletAddress: formData.walletAddress,
         },
       );
       console.log("Registration successful:", response.data);
@@ -196,7 +191,7 @@ export default function Register() {
             </div>
 
             {/* Wallet Address (Optional) */}
-            <div>
+            {/* <div>
               <label className="block text-sm text-neutral-700 mb-2">
                 Wallet Address{" "}
                 <span className="text-neutral-400">(Optional)</span>
@@ -209,7 +204,7 @@ export default function Register() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
               />
-            </div>
+            </div> */}
 
             {/* Register Button */}
             <button
