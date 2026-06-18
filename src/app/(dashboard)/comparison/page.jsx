@@ -11,6 +11,7 @@ import {
   FileText,
 } from "lucide-react";
 import axios from "axios";
+import { showErrorToast, showSuccessToast } from "@/lib/toastConfig";
 
 // Simple debounce implementation
 const useDebounce = (callback, delay) => {
@@ -66,7 +67,7 @@ export default function CaseComparison() {
         const response = await axios.get("http://localhost:8000/api/cases", {
           params: {
             search: query,
-            limit: 5,
+            limit: 10,
           },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -117,7 +118,9 @@ export default function CaseComparison() {
 
   const handleCompare = async () => {
     if (!selectedCase1 || !selectedCase2) {
-      setError("Please select both cases");
+      const errorMsg = "Please select both cases";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
       return;
     }
 
@@ -138,10 +141,12 @@ export default function CaseComparison() {
       );
 
       setComparisonResult(response.data?.data);
+      showSuccessToast("Cases compared successfully!");
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Error comparing cases",
-      );
+      const errorMsg =
+        err.response?.data?.message || err.message || "Error comparing cases";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -149,7 +154,9 @@ export default function CaseComparison() {
 
   const handleDownloadPDF = async () => {
     if (!comparisonResult || !selectedCase1 || !selectedCase2) {
-      setError("Missing data for PDF generation");
+      const errorMsg = "Missing data for PDF generation";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
       return;
     }
 
@@ -183,10 +190,12 @@ export default function CaseComparison() {
       link.click();
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
+      showSuccessToast("PDF downloaded successfully!");
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Error downloading PDF",
-      );
+      const errorMsg =
+        err.response?.data?.message || err.message || "Error downloading PDF";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
     } finally {
       setDownloadingPDF(false);
     }

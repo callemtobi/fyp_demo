@@ -109,8 +109,8 @@ export default function CaseDetail() {
         <div className="animate-pulse space-y-8">
           <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-neutral-200 rounded"></div>
+            {[1, 2, 3].map((i, index) => (
+              <div key={index} className="h-24 bg-neutral-200 rounded"></div>
             ))}
           </div>
         </div>
@@ -239,9 +239,9 @@ export default function CaseDetail() {
               </div>
             ) : (
               <div className="space-y-4">
-                {evidence.map((item) => (
+                {evidence.map((item, index) => (
                   <div
-                    key={item._id}
+                    key={item._id || item.id || `evidence-${index}`}
                     className="border border-neutral-200 rounded-lg p-4 hover:bg-neutral-50 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">

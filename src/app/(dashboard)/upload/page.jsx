@@ -15,6 +15,12 @@ import {
   disconnectWallet,
 } from "@/lib/walletService";
 import { getTokenExpirationTime } from "@/lib/jwtUtils";
+import {
+  showErrorToast,
+  showSuccessToast,
+  showLoadingToast,
+  dismissToast,
+} from "@/lib/toastConfig";
 
 const ACCEPTED_MIME_TYPES = [
   "image/jpeg",
@@ -165,7 +171,10 @@ export default function UploadEvidence() {
       }
     } catch (fetchError) {
       console.error("Error fetching cases:", fetchError);
-      setError(fetchError.response?.data?.message || "Failed to load cases");
+      const errorMsg =
+        fetchError.response?.data?.message || "Failed to load cases";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
     } finally {
       setLoadingCases(false);
     }
@@ -190,7 +199,9 @@ export default function UploadEvidence() {
       const result = await connectWallet();
 
       if (!result.success) {
-        setError(result.error || "Failed to connect wallet");
+        const errorMsg = result.error || "Failed to connect wallet";
+        setError(errorMsg);
+        showErrorToast(errorMsg);
         return;
       }
 
@@ -200,7 +211,9 @@ export default function UploadEvidence() {
         // Try to switch to correct network
         const switchResult = await switchToPolygonAmoy();
         if (!switchResult.success) {
-          setError("Please switch to Polygon Amoy network in MetaMask");
+          const errorMsg = "Please switch to Polygon Amoy network in MetaMask";
+          setError(errorMsg);
+          showErrorToast(errorMsg);
           return;
         }
       }
@@ -209,9 +222,12 @@ export default function UploadEvidence() {
       setWalletAddress(result.address);
       setWalletProvider(result.provider);
       setWalletSigner(result.signer);
+      showSuccessToast("Wallet connected successfully!");
     } catch (err) {
       console.error("Wallet connection error:", err);
-      setError(err.message || "Failed to connect wallet");
+      const errorMsg = err.message || "Failed to connect wallet";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
     }
   };
 
@@ -272,7 +288,9 @@ export default function UploadEvidence() {
       setUploadedEvidences([]);
       setError("");
     } catch (selectError) {
-      setError(selectError.message || "Invalid file selection");
+      const errorMsg = selectError.message || "Invalid file selection";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
       setFiles([]);
       setFilePreviewUrls({});
       setFileDurations({});
@@ -310,26 +328,36 @@ export default function UploadEvidence() {
     try {
       // Validation
       if (!selectedCaseId) {
-        setError("Please select a case before uploading evidence");
+        const errorMsg = "Please select a case before uploading evidence";
+        setError(errorMsg);
+        showErrorToast(errorMsg);
         return;
       }
 
       if (!files.length) {
-        setError("No files selected");
+        const errorMsg = "No files selected";
+        setError(errorMsg);
+        showErrorToast(errorMsg);
         return;
       }
 
       if (!evidenceTitle.trim()) {
-        setError("Evidence title is required");
+        const errorMsg = "Evidence title is required";
+        setError(errorMsg);
+        showErrorToast(errorMsg);
         return;
       }
       if (!description.trim()) {
-        setError("Description is required");
+        const errorMsg = "Description is required";
+        setError(errorMsg);
+        showErrorToast(errorMsg);
         return;
       }
 
       if (!walletConnected) {
-        setError("Please connect your wallet first");
+        const errorMsg = "Please connect your wallet first";
+        setError(errorMsg);
+        showErrorToast(errorMsg);
         return;
       }
 
@@ -673,8 +701,11 @@ export default function UploadEvidence() {
                   ? "Loading cases..."
                   : "Choose a case to continue"}
               </option>
-              {cases.map((caseItem) => (
-                <option key={caseItem._id} value={caseItem._id}>
+              {cases.map((caseItem, index) => (
+                <option
+                  key={caseItem._id || caseItem.id || `case-${index}`}
+                  value={caseItem._id}
+                >
                   {caseItem.caseNumber} - {caseItem.title}
                 </option>
               ))}
@@ -718,8 +749,8 @@ export default function UploadEvidence() {
                       {files.length} file(s) selected
                     </p>
                     <ul className="text-xs text-neutral-500 mb-2 text-left max-h-36 overflow-y-auto">
-                      {files.map((file) => (
-                        <li key={file.name}>
+                      {files.map((file, index) => (
+                        <li key={file.name || `file-${index}`}>
                           {file.name} - {(file.size / 1024 / 1024).toFixed(2)}{" "}
                           MB
                         </li>

@@ -134,9 +134,10 @@ export default function Reports() {
           </div>
         ) : (
           <div className="space-y-3 md:space-y-4 w-full max-w-4xl">
-            {filteredCases.map((caseItem) => (
+            {filteredCases.map((caseItem, index) => (
               <div
-                key={caseItem._id}
+                // key={caseItem._id}
+                key={caseItem._id || caseItem.id || `case-${index}`}
                 className="bg-white rounded-lg border border-neutral-200 overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Case Header */}

@@ -3,7 +3,6 @@
 import { FolderOpen, Briefcase, CheckCircle2, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
 import axios from "axios";
 import {
   AreaChart,
@@ -295,9 +294,9 @@ export default function Dashboard() {
               <SkeletonListItem />
             </>
           ) : recentActivity.length > 0 ? (
-            recentActivity.map((activity) => (
+            recentActivity.map((activity, index) => (
               <div
-                key={activity.id}
+                key={activity._id || activity.id || `activity-${index}`}
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-neutral-100 last:border-0 gap-2"
               >
                 <div className="min-w-0">

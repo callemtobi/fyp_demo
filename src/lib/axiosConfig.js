@@ -1,6 +1,7 @@
 import axios from "axios";
 import { logout } from "./jwtUtils";
 import { disconnectWallet } from "./walletService";
+import { showErrorToast } from "./toastConfig";
 
 let router = null;
 
@@ -23,8 +24,8 @@ export const initializeAxiosInterceptors = (nextRouter) => {
         error.response?.status === 401 &&
         error.response?.data?.code === "TOKEN_EXPIRED"
       ) {
-        // Show alert to user
-        alert("Your session has expired. Please login again.");
+        // Show toast to user
+        showErrorToast("Your session has expired. Please log in again.");
 
         // Disconnect wallet first
         try {
@@ -41,8 +42,8 @@ export const initializeAxiosInterceptors = (nextRouter) => {
 
       // Check if error is 401 without specific code (other auth errors)
       if (error.response?.status === 401) {
-        // Show alert to user
-        alert("Session expired or invalid. Please login again.");
+        // Show toast to user
+        showErrorToast("Session expired or invalid. Please log in again.");
 
         // Disconnect wallet first
         try {
@@ -92,11 +93,11 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       const message = error.response?.data?.message || "Unauthorized";
 
-      // Show alert to user
+      // Show toast to user
       if (message.toLowerCase().includes("expired")) {
-        alert("Your session has expired. Please login again.");
+        showErrorToast("Your session has expired. Please log in again.");
       } else {
-        alert("Session invalid. Please login again.");
+        showErrorToast("Session invalid. Please log in again.");
       }
 
       // Clear token and redirect to login
@@ -110,7 +111,7 @@ apiClient.interceptors.response.use(
       const message =
         error.response?.data?.message ||
         "You do not have permission to perform this action";
-      alert(message);
+      showErrorToast(message);
     }
 
     return Promise.reject(error);

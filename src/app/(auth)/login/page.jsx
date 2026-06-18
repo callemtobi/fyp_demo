@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { initializeAxiosInterceptors } from "@/lib/axiosConfig";
+import { showErrorToast, showSuccessToast } from "@/lib/toastConfig";
 
 const roles = ["Investigator", "Forensic Analyst", "Police Officer", "Judge"];
 
@@ -45,7 +46,7 @@ export default function Login() {
     setLoading(true);
     setError("");
     if (!selectedRole) {
-      setError("Please select a role before logging in.");
+      showErrorToast("Please select a role before logging in.");
       setLoading(false);
       return;
     }
@@ -60,9 +61,12 @@ export default function Login() {
       );
       localStorage.setItem("token", response.data.token);
       initializeAxiosInterceptors(router);
+      showSuccessToast("Login successful!");
       router.push("/dashboard");
     } catch (error) {
-      setError(error.response?.data?.message || "Login failed");
+      const errorMessage = error.response?.data?.message || "Login failed";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,7 +97,7 @@ export default function Login() {
           </div>
 
           {/* Test credentials */}
-          <div>
+          {/* <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-200 mb-3">
               Test Credentials
             </p>
@@ -126,7 +130,7 @@ export default function Login() {
             <p className="text-[10px] text-blue-200 mt-4">
               Final Year Project · Blockchain Technology · 2026
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Right panel — form */}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AlertCircle, CheckCircle2, Loader } from "lucide-react";
 import axios from "axios";
 import ProtectedPage from "@/components/ProtectedPage";
+import { showErrorToast, showSuccessToast } from "@/lib/toastConfig";
 
 export default function CasePage({ onSuccess, onCancel }) {
   const [loading, setLoading] = useState(false);
@@ -73,7 +74,9 @@ export default function CasePage({ onSuccess, onCancel }) {
     } catch (err) {
       console.error("Error fetching officers:", err);
       setOfficers([]);
-      setError("Unable to fetch officers. You can still create a case.");
+      const errorMsg = "Unable to fetch officers. You can still create a case.";
+      setError(errorMsg);
+      showErrorToast(errorMsg);
     }
   };
 
@@ -189,6 +192,7 @@ export default function CasePage({ onSuccess, onCancel }) {
         caseNumber: createdCase?.caseNumber || "",
       });
       setSuccess(true);
+      showSuccessToast(`Case "${formData.title}" created successfully!`);
       if (onSuccess) {
         onSuccess(response.data);
       }
@@ -231,9 +235,10 @@ export default function CasePage({ onSuccess, onCancel }) {
         });
       }, 2000);
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Error creating case",
-      );
+      const errorMessage =
+        err.response?.data?.message || err.message || "Error creating case";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }

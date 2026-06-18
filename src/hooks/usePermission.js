@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { showErrorToast } from "@/lib/toastConfig";
 
 /**
  * Custom hook to check if user has required role(s)
@@ -50,8 +51,8 @@ export const usePermission = (requiredRoles, redirectOnUnauthorized = true) => {
         setHasPermission(userHasPermission);
 
         if (!userHasPermission && redirectOnUnauthorized) {
-          // Show alert and redirect
-          alert(
+          // Show toast and redirect
+          showErrorToast(
             "You do not have permission to access this page. Your role is: " +
               userData.role,
           );

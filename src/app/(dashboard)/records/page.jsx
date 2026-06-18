@@ -186,7 +186,7 @@ export default function EvidenceRecords() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-neutral-700 truncate block max-w-xs">
-                        {getCaseTitle(evidence.caseId)}
+                        {getCaseTitle(evidence.caseId).substring(0, 30) + "..."}
                       </span>
                     </td>
                     <td className="px-4 py-3">

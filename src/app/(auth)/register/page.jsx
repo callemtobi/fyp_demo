@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Shield } from "lucide-react";
 import axios from "axios";
+import { showErrorToast, showSuccessToast } from "@/lib/toastConfig";
 
 const roles = ["Investigator", "Forensic Analyst", "Police Officer", "Judge"];
 
@@ -29,7 +30,7 @@ export default function Register() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      showErrorToast("Passwords do not match!");
       setLoading(false);
       return;
     }
@@ -55,6 +56,7 @@ export default function Register() {
         },
       );
       console.log("Registration successful:", response.data);
+      showSuccessToast("Registration successful! Redirecting to login...");
       router.push("/login");
     } catch (error) {
       setError(error.response?.data?.message || "Registration failed");

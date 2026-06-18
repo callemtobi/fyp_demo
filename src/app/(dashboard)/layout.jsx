@@ -6,21 +6,10 @@ import { useRouter } from "next/navigation";
 import { initializeAxiosInterceptors } from "@/lib/axiosConfig";
 import { getTokenExpirationTime, isTokenExpired } from "@/lib/jwtUtils";
 import { disconnectWallet } from "@/lib/walletService";
+import { showWarningToast, showErrorToast } from "@/lib/toastConfig";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
-
-  const warningAlert = (message) => {
-    return (
-      <div
-        class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4"
-        role="alert"
-      >
-        <p class="font-bold">Be Warned</p>
-        <p>{message}</p>
-      </div>
-    );
-  };
 
   useEffect(() => {
     // Initialize axios interceptors once
@@ -35,8 +24,8 @@ export default function DashboardLayout({ children }) {
 
     // Check if token is already expired
     if (isTokenExpired(token)) {
-      // alert("Your session has expired. Please login again.");
-      warningAlert("Your session has expired. Please login again.");
+      // Show toast notification
+      showErrorToast("Your session has expired. Please log in again.");
       disconnectWallet().catch((error) => {
         console.error("Error disconnecting wallet:", error);
       });
@@ -60,7 +49,7 @@ export default function DashboardLayout({ children }) {
 
       // If less than 10 seconds remaining, warn user
       if (remainingTime <= 10 && remainingTime > 0) {
-        warningAlert(
+        showWarningToast(
           "Your session is about to expire in " +
             remainingTime +
             " seconds. Please save your work.",
@@ -69,7 +58,7 @@ export default function DashboardLayout({ children }) {
 
       // If expired, logout
       if (remainingTime <= 0) {
-        warningAlert("Your session has expired. You are being logged out.");
+        showErrorToast("Your session has expired. You are being logged out.");
         disconnectWallet().catch((error) => {
           console.error("Error disconnecting wallet:", error);
         });
