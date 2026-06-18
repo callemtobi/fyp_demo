@@ -29,6 +29,7 @@
     "thirdweb": "^5"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.11",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "15.4.6",

@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+  
+Project configuration -> deploy settings:
+  
+  | Setting           | Value                                                                       |
+| ----------------- | --------------------------------------------------------------------------- |
+| Base directory    | `frontend`                                                                  |
+| Build command     | `npm run build`                                                             |
+| Publish directory | `.next` (for Next.js with Netlify plugin) or `out` (if using static export) |
