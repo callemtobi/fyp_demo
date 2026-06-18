@@ -1,8 +1,6 @@
 import { Inter } from "next/font/google";
-import Metadata from "next";
 import "./globals.css";
 import { ThirdwebProvider } from "thirdweb/react";
-import axios from "axios";
 import ToasterProvider from "@/components/ToasterProvider";
 
 const inter = Inter({ subsets: ["latin"] });
